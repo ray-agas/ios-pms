@@ -91,7 +91,7 @@ Wi-Fi hub. "Your server queues a job … against the Bridge, and the Bridge exec
 | Which Bridge to use for a lock | Caller must supply `bridgeId`. Take it from the lock's `linkedAccessories` / `linkedDevices`. Sending the wrong Bridge: `404 Bridge or Device Not Found` or failure — NF. | HYP |
 | Transfer Bridge / device between accounts | No API. SDK troubleshooting: `DevicePairedException` → "factory reset if transferring". Unpair removes all credentials. | DOC (SDK), NF (API) |
 | Bridge firmware | EB1 DFU runs as a cloud job created by the SDK (`checkFirmwareUpdate`/`performDfu`), polled every 3 s. No REST endpoint documented. | DOC (SDK) |
-| Rate limits | Bridge-targeted job: 1 per 5 min (`429` + `Retry-After`). Proxied jobs: none documented; `jobStatus: 2` = "another operation is in progress" on device. | DOC |
+| Rate limits | Bridge-targeted job: 1 per 5 min (`429` + `Retry-After`). Proxied jobs: none in the API reference; `jobStatus: 2` = "another operation is in progress" on device. igloohome support pages (Make section): the Bridge "currently handles 2 jobs per minute"; Bridge jobs time out after 2 min. Not enforced with a 429 in our data (research 13 §3a) | DOC (support) · API |
 | Does a Bridge enable every operation? | **No.** See unsupported list above. Credentials of type keycard/fingerprint/ekey cannot be managed through the Bridge. | DOC |
 
 ### Bridge-targeted status response (DOC, webhook)

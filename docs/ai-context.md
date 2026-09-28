@@ -316,6 +316,7 @@ Full list: [`docs/architecture/environment-configuration.md`](architecture/envir
   - [`docs/plans/iot-pms-platform-foundation-plan.md`](plans/iot-pms-platform-foundation-plan.md) (most recent);
   - [`docs/plans/igloohome-implementation-plan.md`](plans/igloohome-implementation-plan.md) §21 (slice 1 / M5);
   - `docs/plans/slice-2-guest-stay-access-plan.md` is **superseded**: stays belong to Bobobox AU.
+  - [`docs/plans/bobobox-au-x3-lock-platform-draft.md`](plans/bobobox-au-x3-lock-platform-draft.md): **parked draft**, no code; iot-pms as AU's X3 lock platform (one Bridge per cabin). `docs/research/igloohome/13-make-beds24-integration.md` is a reference note on an integration iot-pms does **not** use.
 
 ## 15. Known limitations, gaps and open items
 
