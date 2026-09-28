@@ -120,6 +120,7 @@ flowchart LR
 - **No per-device igloohome call** happens in an ordinary render.
 - `/devices` shows **compact cabin/room rows** with URL filters and paging. **Watching** up to `IOT_PMS_MONITOR_MAX` (default 3) cabins loads live detail (`GET /devices/{id}`, reused 30 s unless the device sent an event) and the full topology panel.
 - Live updates: `LiveRefresh` polls `/api/activity?after=` every 4 s (database only). It re-renders at once for watched devices; other events refresh at most every 30 s.
+- `/activity` filters by Bridge (`?bridge=`), then by a device seen through it (`?device=`), then by event group. `/people` account activity filters by person (actor or target), type and date; `/access` Issued list by text, device, status and created date; PIN pickers are searchable and show what a keypad opens (`opensOf`).
 
 ### 5.3 Bridge job (health check, PIN job, lock/unlock, pull logs)
 ```
@@ -310,7 +311,7 @@ Full list: [`docs/architecture/environment-configuration.md`](architecture/envir
   - Foundation plan F0–F7b and F6 review: Postgres/Drizzle, accounts and roles, registry, scale, scopes, vault, emergency lock/unlock.
   - G1 experiment mode, with the switch/keypad results turned into regular features.
   - The access UX (device picker, vault filters, compact Issued list).
-- **Tests:** 166 passing (`bun run check`), build passing.
+- **Tests:** 167 passing (`bun run check`), build passing.
 - **Progress logs:**
   - [`docs/plans/iot-pms-platform-foundation-plan.md`](plans/iot-pms-platform-foundation-plan.md) (most recent);
   - [`docs/plans/igloohome-implementation-plan.md`](plans/igloohome-implementation-plan.md) §21 (slice 1 / M5);

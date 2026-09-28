@@ -1,6 +1,6 @@
 import "server-only";
 
-import { targetName } from "@/lib/device-kinds";
+import { opensOf } from "@/lib/device-kinds";
 
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 
@@ -29,6 +29,7 @@ export interface AlgoPinTarget {
   name: string;
   kind: string;
   place?: string; // cabin or room
+  opens?: string[]; // keypads: what a PIN typed here unlocks
   modelName?: string;
   timeZone: string;
   allowed: boolean;
@@ -75,7 +76,8 @@ export async function algoPinTargets(caller: Caller): Promise<AlgoPinTarget[]> {
     ) as AlgoPinTarget["types"];
     return {
       deviceRef: ref,
-      name: targetName(view, ref, ctx.nameOf),
+      name: view?.name ?? ref,
+      opens: opensOf(view, ctx.nameOf),
       kind: view?.kind ?? "unknown",
       place: ctx.places.get(ref),
       modelName: view?.modelName,

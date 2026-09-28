@@ -374,12 +374,17 @@ function DeviceNode({
                 </div>
               ) : null}
               {checks.emergency?.findings?.[device.id]?.length ? (
-                <div className="col-span-2 flex flex-wrap items-center gap-1.5 sm:col-span-3">
-                  <span className="text-xs text-muted-foreground">Experiments:</span>
-                  {checks.emergency.findings[device.id].map((f) => (
-                    <FindingBadge key={f.kind} finding={f} withLabel />
-                  ))}
-                </div>
+                // Collapsed by default: history, not something needed every time (hover a badge for the reason).
+                <details className="group col-span-2 text-xs sm:col-span-3 [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
+                    <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden /> Experiment history ({checks.emergency.findings[device.id].length})
+                  </summary>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {checks.emergency.findings[device.id].map((f) => (
+                      <FindingBadge key={f.kind} finding={f} withLabel />
+                    ))}
+                  </div>
+                </details>
               ) : null}
               {checks.emergency?.options[device.id] && (
                 <div className="col-span-2 sm:col-span-3">
@@ -391,7 +396,6 @@ function DeviceNode({
                     lockState={device.lockState}
                     options={checks.emergency.options[device.id]}
                     run={checks.emergency.run}
-                    finding={checks.emergency.findings?.[device.id]?.find((f) => f.kind === "remote_lock" || f.kind === "remote_unlock")}
                     deviceKind={device.kind}
                   />
                 </div>

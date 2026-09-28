@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "People · iot-pms" };
 export default async function PeoplePage() {
   const session = await auth();
   if (!atLeast(session?.user?.role, "super_admin")) notFound(); // hidden from operators and viewers
-  const [users, events, ceiling, scopes] = await Promise.all([listUsers(), listAudit(25), getCeiling(), allAssignedScopes()]);
+  const [users, events, ceiling, scopes] = await Promise.all([listUsers(), listAudit(300), getCeiling(), allAssignedScopes()]);
 
   return (
     <div className="flex flex-col gap-6">

@@ -120,6 +120,7 @@ export function PinJobForm({
             allowed: Boolean(allowedOf(t)?.allowed),
             reason: allowedOf(t)?.reason,
             hint: [t.experimental && "Experiment", t.bridgeName && `via ${t.bridgeName}`].filter(Boolean).join(" · ") || undefined,
+            opens: t.opens,
           }))}
         />
         {hiddenNote && <p className="mt-1 text-xs text-muted-foreground">{hiddenNote}</p>}

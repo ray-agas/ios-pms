@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { EvidenceBadge, FEED_ICON, LiveDot, METHOD_ICON, RelativeTime } from "@/components/visuals";
+import { DeviceGlyph, EvidenceBadge, FEED_ICON, LiveDot, METHOD_ICON, RelativeTime } from "@/components/visuals";
 import { cn } from "@/lib/utils";
 import type { FeedItem } from "@/server/application/dashboard";
 import { Code } from "@/components/code-hint";
@@ -140,20 +140,32 @@ export function ActivityFeed({
   names,
   bridges,
   initialBridge = "all",
+  initialDevice = "all",
 }: {
   initial: Feed;
   names: DeviceNames;
   bridges: BridgeChoice[];
   initialBridge?: string;
+  initialDevice?: string;
 }) {
   const [bridge, setBridgeState] = useState(initialBridge);
+  const [device, setDeviceState] = useState(initialDevice);
+  // Keep the choices in the URL so they survive a reload and can be shared.
+  const setParam = (key: string, value: string) => {
+    const url = new URL(window.location.href);
+    if (value === "all") url.searchParams.delete(key);
+    else url.searchParams.set(key, value);
+    window.history.replaceState(null, "", url);
+  };
   const setBridge = (next: string) => {
     setBridgeState(next);
-    // Keep the choice in the URL so it survives a reload and can be shared.
-    const url = new URL(window.location.href);
-    if (next === "all") url.searchParams.delete("bridge");
-    else url.searchParams.set("bridge", next);
-    window.history.replaceState(null, "", url);
+    setParam("bridge", next);
+    setDeviceState("all"); // a device belongs to one Bridge: start over
+    setParam("device", "all");
+  };
+  const setDevice = (next: string) => {
+    setDeviceState(next);
+    setParam("device", next);
   };
   const [items, setItems] = useState(initial.items);
   const [hiddenSystem, setHiddenSystem] = useState(initial.hiddenSystem);
@@ -211,7 +223,15 @@ export function ActivityFeed({
     void poll(true);
   }, [showSystem, poll]);
 
-  const inBridge = bridge === "all" ? items : items.filter((i) => bridgeOf(i) === bridge);
+  const inBridgeAll = bridge === "all" ? items : items.filter((i) => bridgeOf(i) === bridge);
+  // Devices seen through the selected Bridge (the Bridge's own connection events count as the Bridge).
+  const devices = useMemo(() => {
+    const seen = new Map<string, number>();
+    for (const i of inBridgeAll) seen.set(i.deviceDisplay, (seen.get(i.deviceDisplay) ?? 0) + 1);
+    return [...seen].sort((a, b) => b[1] - a[1]);
+  }, [inBridgeAll]);
+  const deviceActive = device !== "all" && devices.some(([id]) => id === device) ? device : "all";
+  const inBridge = deviceActive === "all" ? inBridgeAll : inBridgeAll.filter((i) => i.deviceDisplay === deviceActive);
   const counts = useMemo(() => Object.fromEntries(FILTERS.map((f) => [f.id, inBridge.filter((i) => matches(i, f.id)).length])), [inBridge]);
   const visible = inBridge.filter((i) => matches(i, filter));
   const perBridge = useMemo(() => {
@@ -260,6 +280,31 @@ export function ActivityFeed({
           );
         })}
       </div>
+
+      {devices.length > 1 && (
+        <div role="group" aria-label="Device" className="-mx-4 -my-1 flex gap-1.5 overflow-x-auto px-4 py-1 [scrollbar-width:none] md:mx-0 md:px-1">
+          {[["all", inBridgeAll.length] as [string, number], ...devices].map(([id, n]) => {
+            const active = deviceActive === id;
+            const d = names[id];
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setDevice(id)}
+                className={cn(
+                  "flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                  active ? "border-primary/50 bg-primary/10 text-primary" : "bg-card text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {id !== "all" && d?.kind && <DeviceGlyph kind={d.kind} className="size-5 rounded [&_svg]:size-3" />}
+                <span className="max-w-40 truncate">{id === "all" ? "All devices" : (d?.name ?? id)}</span>
+                <span className="text-xs tabular-nums opacity-70">{n}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div role="group" aria-label="Filter events" className="-mx-4 -my-1 flex gap-1.5 overflow-x-auto px-4 py-1 [scrollbar-width:none] md:mx-0 md:px-1">

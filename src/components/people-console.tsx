@@ -68,7 +68,7 @@ export function PeopleConsole({ users, events, selfId, create, update, reset, sc
           <h2 className="flex items-center gap-2 font-semibold">
             <UserPlus className="size-4 text-primary" aria-hidden /> New account
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <label className="flex flex-col gap-1.5 text-sm font-medium">
               Username
               <input required value={draft.username} onChange={(e) => setDraft({ ...draft, username: e.target.value })} autoComplete="off" className={input} />
@@ -88,8 +88,16 @@ export function PeopleConsole({ users, events, selfId, create, update, reset, sc
               </select>
             </label>
             <label className="flex flex-col gap-1.5 text-sm font-medium">
-              E-mail (for Google, optional)
-              <input type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} className={input} />
+              <span>
+                E-mail <span className="font-normal text-muted-foreground">(optional)</span>
+              </span>
+              <input
+                type="email"
+                value={draft.email}
+                onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+                placeholder="for Google sign-in"
+                className={input}
+              />
             </label>
           </div>
           <div className="flex items-center gap-3">
@@ -214,32 +222,101 @@ export function PeopleConsole({ users, events, selfId, create, update, reset, sc
 
       <div className="flex flex-col gap-5 self-start">
       {aside}
-      {/* Audit */}
-      <section aria-labelledby="audit" className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
-        <h2 id="audit" className="flex items-center gap-2 font-semibold">
-          <ShieldCheck className="size-4 text-primary" aria-hidden /> Recent account activity
-        </h2>
-        {events.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing yet.</p>
-        ) : (
-          <ol className="flex flex-col divide-y text-sm">
-            {events.map((e) => (
-              <li key={e.id} className="flex flex-col gap-0.5 py-2">
-                <span>
-                  <span className="font-medium">{e.actor}</span> · <span className="font-mono text-xs">{e.action}</span>
-                  {e.target && e.target !== e.actor ? <> → {e.target}</> : null}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  <RelativeTime iso={e.at} />
-                  {e.detail ? ` · ${e.detail}` : ""}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
+      <AuditPanel events={events} />
       </div>
     </div>
+  );
+}
+
+// --- Recent account activity (filterable; built for long histories) --------------------------------------------
+
+type AuditEvent = Props["events"][number];
+const AUDIT_GROUPS: { id: string; label: string; test: (action: string) => boolean }[] = [
+  { id: "sign_in", label: "Sign-ins", test: (a) => a.startsWith("sign_in") },
+  { id: "accounts", label: "Accounts", test: (a) => a.startsWith("user.") && a !== "user.scopes" },
+  { id: "scopes", label: "Scopes", test: (a) => a.startsWith("scopes.") || a === "user.scopes" },
+  { id: "pins", label: "PINs", test: (a) => a.startsWith("pin.") },
+  { id: "devices", label: "Devices and jobs", test: (a) => /^(device|space|registry)\./.test(a) },
+];
+const AUDIT_PAGE = 10;
+const auditDay = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+
+function AuditPanel({ events }: { events: AuditEvent[] }) {
+  const [person, setPerson] = useState("");
+  const [group, setGroup] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [limit, setLimit] = useState(AUDIT_PAGE);
+  // A person appears as the one who acted, or as the account something was done to.
+  const people = [...new Set(events.flatMap((e) => [e.actor, ...(e.target && !e.target.includes("•") && !e.target.startsWith("vault") ? [e.target] : [])]))].sort();
+  const test = AUDIT_GROUPS.find((g) => g.id === group)?.test;
+  const shown = events.filter((e) => {
+    const day = auditDay(e.at);
+    return (!person || e.actor === person || e.target === person) && (!test || test(e.action)) && (!from || day >= from) && (!to || day <= to);
+  });
+  const filtering = Boolean(person || group || from || to);
+  const field = cn(input, "h-9");
+
+  return (
+    <section aria-labelledby="audit" className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
+      <h2 id="audit" className="flex items-center gap-2 font-semibold">
+        <ShieldCheck className="size-4 text-primary" aria-hidden /> Recent account activity{" "}
+        <span className="text-sm font-normal text-muted-foreground">({filtering ? `${shown.length} of ${events.length}` : events.length})</span>
+      </h2>
+      {events.length > 0 && (
+        <div className="grid grid-cols-2 gap-2">
+          <select aria-label="Person" value={person} onChange={(e) => setPerson(e.target.value)} className={field}>
+            <option value="">Everyone</option>
+            {people.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <select aria-label="Type" value={group} onChange={(e) => setGroup(e.target.value)} className={field}>
+            <option value="">All types</option>
+            {AUDIT_GROUPS.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+          <label className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+            From
+            <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className={field} />
+          </label>
+          <label className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+            to
+            <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className={field} />
+          </label>
+        </div>
+      )}
+      {events.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nothing yet.</p>
+      ) : shown.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nothing matches these filters.</p>
+      ) : (
+        <ol className="flex flex-col divide-y text-sm">
+          {shown.slice(0, limit).map((e) => (
+            <li key={e.id} className="flex flex-col gap-0.5 py-1.5">
+              <span className="truncate">
+                <span className="font-medium">{e.actor}</span> · <span className="font-mono text-xs">{e.action}</span>
+                {e.target && e.target !== e.actor ? <> → {e.target}</> : null}
+              </span>
+              <span className="truncate text-xs text-muted-foreground" title={e.detail}>
+                <RelativeTime iso={e.at} />
+                {e.detail ? ` · ${e.detail}` : ""}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {shown.length > limit && (
+        <button type="button" onClick={() => setLimit(limit + AUDIT_PAGE * 2)} className="w-fit text-sm font-medium text-primary hover:underline">
+          Show {Math.min(AUDIT_PAGE * 2, shown.length - limit)} more
+        </button>
+      )}
+    </section>
   );
 }
 

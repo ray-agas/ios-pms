@@ -1,6 +1,6 @@
 import "server-only";
 
-import { targetName } from "@/lib/device-kinds";
+import { opensOf } from "@/lib/device-kinds";
 import { provenUnsupported } from "@/lib/device-support";
 
 import { eq } from "drizzle-orm";
@@ -43,6 +43,8 @@ export interface PinJobTarget {
   experimental?: boolean;
   kind: string;
   place?: string; // cabin or room
+  /** Keypads: the devices a PIN typed here unlocks (e.g. the bedlock switch). */
+  opens?: string[];
 }
 
 async function decide(kind: PinKind, caller: Caller) {
@@ -77,7 +79,8 @@ async function decide(kind: PinKind, caller: Caller) {
       return {
         target: t,
         ref,
-        name: targetName(view, ref, (r) => views.get(r)?.name),
+        name: view?.name ?? ref,
+        opens: opensOf(view, (r) => views.get(r)?.name),
         bridgeName: t.bridge ? views.get(redactDeviceId(t.bridge.deviceId))?.name ?? t.bridge.deviceName : undefined,
         timeZone: view?.propertyIds.map((id) => roomTz.get(id)).find(Boolean) ?? "Asia/Jakarta",
         place: places.get(ref),
@@ -102,6 +105,7 @@ export async function pinJobTargets(caller: Caller): Promise<PinJobTarget[]> {
       experimental: (c.decision.allowed && c.decision.experimental) || (r.decision.allowed && r.decision.experimental) || undefined,
       kind: c.target.kind,
       place: c.place,
+      opens: c.opens,
     };
   });
 }

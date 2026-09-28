@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Link2, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -20,9 +20,19 @@ export interface PickerItem {
   allowed: boolean;
   reason?: string;
   hint?: string; // e.g. model or Bridge
+  /** Keypads: what a PIN typed on it unlocks (e.g. a bedlock switch that cannot hold PINs itself). */
+  opens?: string[];
 }
 
 const NO_PLACE = "No cabin or room";
+
+function Opens({ names }: { names: string[] }) {
+  return (
+    <span className="flex items-center gap-1 truncate text-xs font-medium text-primary">
+      <Link2 className="size-3 shrink-0" aria-hidden /> Opens {names.join(", ")}: a PIN here unlocks {names.length === 1 ? "it" : "them"}
+    </span>
+  );
+}
 
 export function DevicePicker({ items, value, onChange, label = "Device" }: { items: PickerItem[]; value: string; onChange: (ref: string) => void; label?: string }) {
   const [open, setOpen] = useState(false);
@@ -37,7 +47,7 @@ export function DevicePicker({ items, value, onChange, label = "Device" }: { ite
     const needle = q.trim().toLowerCase();
     return items
       .filter((i) => (!kind || i.kind === kind) && (!onlyAllowed || i.allowed))
-      .filter((i) => !needle || [i.name, i.place, i.ref, KIND_LABEL[i.kind]].some((x) => x?.toLowerCase().includes(needle)))
+      .filter((i) => !needle || [i.name, i.place, i.ref, KIND_LABEL[i.kind], ...(i.opens ?? [])].some((x) => x?.toLowerCase().includes(needle)))
       .sort((a, b) => (a.place ?? "~").localeCompare(b.place ?? "~") || Number(b.allowed) - Number(a.allowed) || a.name.localeCompare(b.name));
   }, [items, q, kind, onlyAllowed]);
 
@@ -53,7 +63,7 @@ export function DevicePicker({ items, value, onChange, label = "Device" }: { ite
         <button
           type="button"
           aria-label={`${label}: ${selected ? selected.name : "choose"}`}
-          className="flex h-12 w-full items-center gap-3 rounded-lg border border-input bg-background px-2.5 text-left text-sm outline-none transition-shadow focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40"
+          className="flex min-h-12 w-full items-center gap-3 py-1.5 rounded-lg border border-input bg-background px-2.5 text-left text-sm outline-none transition-shadow focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40"
         >
           {selected ? (
             <>
@@ -64,6 +74,7 @@ export function DevicePicker({ items, value, onChange, label = "Device" }: { ite
                   {selected.place ?? NO_PLACE} · <span className="font-mono">{selected.ref}</span>
                   {selected.allowed ? "" : " · not available"}
                 </span>
+                {selected.opens?.length ? <Opens names={selected.opens} /> : null}
               </span>
             </>
           ) : (
@@ -157,6 +168,7 @@ export function DevicePicker({ items, value, onChange, label = "Device" }: { ite
                       {item.hint ? ` · ${item.hint}` : ""}
                       {!item.allowed && item.reason ? ` · ${item.reason}` : ""}
                     </span>
+                    {item.opens?.length ? <Opens names={item.opens} /> : null}
                   </span>
                   {item.ref === value && <Check className="size-4 text-primary" aria-hidden />}
                 </button>

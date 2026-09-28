@@ -150,7 +150,7 @@ export function AlgoPinForm({
             label="Device"
             value={deviceRef}
             onChange={setDeviceRef}
-            items={targets.map((t) => ({ ref: t.deviceRef, name: t.name, kind: t.kind, place: t.place, allowed: t.allowed, reason: t.reason, hint: t.modelName }))}
+            items={targets.map((t) => ({ ref: t.deviceRef, name: t.name, kind: t.kind, place: t.place, allowed: t.allowed, reason: t.reason, hint: t.modelName, opens: t.opens }))}
           />
         </Field>
 

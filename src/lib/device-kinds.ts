@@ -8,11 +8,12 @@ export const KIND_LABEL: Record<string, string> = {
   unknown: "Device",
 };
 
-/** "Keypad-Bedlock · keypad for switch-bedlock": a keypad opens what it is linked to (EK2X → SW1X, device-topology.md). */
-export function targetName(view: { name?: string; kind: string; linked?: string[] } | undefined, ref: string, nameOf: (ref: string) => string | undefined): string {
-  const name = view?.name ?? ref;
-  if (view?.kind !== "keypad" || !view.linked?.length) return name;
-  const opens = view.linked.map(nameOf).filter(Boolean);
-  return opens.length ? `${name} · keypad for ${opens.join(", ")}` : name;
+/**
+ * What a keypad opens: the devices on its record's links (EK2X → SW1X; a PIN typed on the keypad unlocks the switch,
+ * EXP-20260928-01). Empty for anything else.
+ */
+export function opensOf(view: { kind: string; linked?: string[] } | undefined, nameOf: (ref: string) => string | undefined): string[] {
+  if (view?.kind !== "keypad") return [];
+  return (view.linked ?? []).map(nameOf).filter((n): n is string => Boolean(n));
 }
 

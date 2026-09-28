@@ -21,3 +21,13 @@ describe("proven device support", () => {
     expect(provenUnsupported("lock", ["remote_lock", "remote_unlock"])).toBe(false);
   });
 });
+
+describe("what a keypad opens", () => {
+  test("a keypad lists the devices on its links; other kinds list nothing", async () => {
+    const { opensOf } = await import("@/lib/device-kinds");
+    const names: Record<string, string> = { "SW1X••••••30": "switch-bedlock" };
+    expect(opensOf({ kind: "keypad", linked: ["SW1X••••••30", "EB1X••••••32"] }, (r) => names[r])).toEqual(["switch-bedlock"]);
+    expect(opensOf({ kind: "lock", linked: ["SW1X••••••30"] }, (r) => names[r])).toEqual([]);
+    expect(opensOf(undefined, (r) => names[r])).toEqual([]);
+  });
+});
