@@ -1,0 +1,124 @@
+# Remote Jobs for Bridge
+# type=article uri=/docs/Bridge API/bridge-targeted-jobs.md
+
+---
+stoplight-id: b0amiokly9501
+---
+
+# Bridge Targeted Jobs
+
+These jobs only target the Bridge devices, and do not target any lock device.
+
+### Contents
+
+- [Job Creation](#job-creation)
+- [Job Types](#job-types)
+- [Job Details](#job-details)
+  - [Get Device Status](#get-device-status)
+  <!-- - [Link Device](#link-device)
+  - [Unlink Device](#unlink-device) -->
+- [Error Status Codes](#error-status-codes)
+
+## Job Creation
+
+To create a job, make a POST request to the Bridge Targeted job creation endpoint:
+
+```
+/devices/{deviceId}/jobs
+```
+
+Try the API [here]((https://igloocompany.stoplight.io/docs/igloohome-api/8uellqkosv7ry-create-a-bridge-targeted-job)).
+
+### Request
+
+| Parameters | Type                                                                              |
+| ---------- | --------------------------------------------------------------------------------- |
+| jobType    | integer, see [Job Types](#job-types) for a full list                               |
+
+#### Payload Format
+
+```json
+{
+    jobType: integer
+}
+```
+
+### Response
+
+```json
+{
+  jobId: string
+}
+```
+
+## Job Types
+
+| Job Type          | Number |
+| ----------------- | ------ |
+| Get Device Status | 10     |
+
+<!-- | Link Device       | 31     |
+| Unlink Device     | 32     | -->
+
+## Job Details
+
+### Get Device Status (Bridge Diagnostic)
+
+#### Payload Format
+
+```json
+{
+    jobType: 10
+}
+```
+Once job is completed, you will receive webhook. Webhook event details can be seen [here](https://igloocompany.stoplight.io/docs/igloohome-api/837fqriyoqln8-bridge-targeted-events).
+
+<!-- 
+### Link Device
+
+| Parameter | Type   | Description                                           | Required |
+| --------- | ------ | ----------------------------------------------------- | -------- |
+| deviceId  | string | The Bluetooth ID of the device to link to the Bridge. | Yes      |
+
+#### Payload Format
+
+```json
+{
+    jobType: 31,
+    jobData: {
+        deviceId: string
+    }
+}
+```
+
+### Unlink Device
+
+| Parameter | Type   | Description                                               | Required |
+| --------- | ------ | --------------------------------------------------------- | -------- |
+| deviceId  | string | The Bluetooth ID of the device to unlink from the Bridge. | Yes      |
+
+#### Payload Format
+
+```json
+{
+    jobType: 32,
+    jobData: {
+        deviceId: string
+    }
+}
+``` -->
+
+## Error Status Codes
+
+| Status Code | Message (API Response)                                 | Description                                                                                              | Applies To |
+| ----------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ---------- |
+| 400         | Bad Request                                            | The request was unacceptable, often due to a missing or invalid parameter (e.g., `<field>` is required). | All        |
+| 401         | Unauthorized                                           | No valid API key or access token was provided in the request header.                                     | All        |
+| 402         | Payment Required (Various Messages)                    | The API trial has ended or the payment method was declined. Please verify billing details.               | All        |
+| 403         | Forbidden                                              | The authenticated user does not have the necessary permissions (scopes) for this resource.               | All        |
+| 404         | Not Found                                              | The requested resource does not exist or the endpoint URL is incorrect.                                  | All        |
+| 405         | Method Not Allowed                                     | The HTTP method used is not supported by this endpoint.                                                  | All        |
+| 406         | Unable to contact bridge as it appears to be offline   | Note: Unable to contact the bridge. Ensure the physical hardware is powered on and connected.            | All        |
+| 415         | Unsupported Media Type                                 | The Content-Type header must be set to `application/json`.                                               | N/A        |
+| 429         | Too many requests. Please try again after `X` seconds. | Rate limit exceeded. Maximum 1 request every 5 minutes.                                                  | All        |
+| 500         | Internal Server Error                                  | An unexpected error occurred on our end. Please retry later or contact support.                          | All        |

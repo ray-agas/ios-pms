@@ -1,0 +1,96 @@
+# What is algoPIN?
+# type=article uri=/docs/API/02algoPIN.md
+
+---
+stoplight-id: cbc75e9e68e0e
+---
+
+# What is algoPIN?
+## Overview
+algoPIN is a feature that allows you to **generate valid PIN codes** even when you don't have WiFi, cellular, or remote access to your lock.
+
+## Sequence diagram
+
+```mermaid
+sequenceDiagram
+  Note over Your Server, Our Server: igloohome API
+  Your Server->>Our Server: Request algoPIN
+  Our Server-->>Your Server: algoPIN code
+  Your Server->>Guest: algoPIN code
+  Guest->>Lock: Enter algoPIN code
+  Lock->>Lock: Unlock
+```
+
+## Types of algoPIN codes
+1. One-Time (OTP)
+2. Permanent
+3. Duration (Hourly) - 1 to 672 hours
+4. Duration (Daily) - 29 to 367 days
+
+## algoPIN limitations
+| Limitation | Explanation |
+|--|--|
+|Only on algoPIN-supported devices|The device has to support algoPIN. See list [here](https://igloocompany.stoplight.io/docs/igloohome-api/8384dd6d8d7ef-devices-supported-on-igloohome-api-2).|
+|Paired devices|The device has to be paired, and it has to be paired using the igloohome app.|
+|24-hour activation|algoPIN codes that last more than 24 hours need to be activated on the lock. To activate it, simply use the PIN code within the first 24 hours of its validity.|
+|256 rule|256-hour algoPIN deletion limitation. This means that if algoPIN created with start date > 256 hours from current time, they can't delete the PIN.|
+|199 rule|The whitelist and blacklist of the lock is 199 PIN codes max (both algoPIN and Bluetooth PIN codes).|
+|Number of PINs per duration|For a specified duration, you may only generate a fixed number of PINs indicated by the [number of variances](#generate-multiple-algopin-codes-for-the-same-duration-variance).|
+
+## Variance feature: Multiple algoPIN codes for the same duration
+**For a given duration**, you can create a **multiple unique algoPIN codes**.
+|PIN code Type |Number of Variances|
+|--|--|
+|OTP|5|
+|Permanent|5|
+|Duration (Hourly)|3|
+|Duration (Daily)|3|
+
+Here's an example that illustrates this:
+|Start time|End time|Duration PIN codes|deviceId|
+|--|--|--|--|
+|2PM|3PM|511093918, 945844647, 052368115|OE1X02abc123|
+|2PM|4PM|633654730, 437755350, 337288611|OE1X02abc123|
+|2PM|5PM|381750736, 830094870, 719038999|OE1X02abc123|
+|3PM|4PM|752994740, 538785775, 856468831|OE1X02abc123|
+|3PM|5PM|297248165, 196981787, 384522901|OE1X02abc123|
+|3PM|5PM|948950871, 142404925, 817840781|IGP114cde456|
+
+For example, the following request would return a unique PIN code (e.g. **'4642226'**).
+```curl
+curl --request POST \
+  --url https://api.igloodeveloper.co/igloohome/devices/IGP101abc123/algopin/onetime \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer abcdef' \
+  --data '{
+  "variance": 1,
+  "startDate": "2022-01-01T00:00:00+08:00",
+  "accessName": "Maintenance guy"
+}'
+```
+
+But by changing the variance, you can get a second unique PIN code (e.g. **'1419472'**) for the same duration.
+```curl
+curl --request POST \
+  --url https://api.igloodeveloper.co/igloohome/devices/IGP101abc123/algopin/onetime \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer abcdef' \
+  --data '{
+  "variance": 2,
+  "startDate": "2022-01-01T00:00:00+08:00",
+  "accessName": "Maintenance guy 2"
+}'
+```
+
+
+## Activation limitation
+For algoPIN codes that last longer than 24 hours, activation on the lock is required. To activate an algoPIN code, simply use the algoPIN code on the lock within the 24-hour window.
+
+The following illustrations detail how this 24-hour activation requirement works:
+
+![igloohome app onboarding (5).png](https://stoplight.io/api/v1/projects/cHJqOjEzNjUyMA/images/gX9zSKbWbrA)
+
+![igloohome app onboarding (6).png](https://stoplight.io/api/v1/projects/cHJqOjEzNjUyMA/images/wOZl2UCkZD8)
+
+![igloohome app onboarding (7).png](https://stoplight.io/api/v1/projects/cHJqOjEzNjUyMA/images/SmeHePImJKM)
+

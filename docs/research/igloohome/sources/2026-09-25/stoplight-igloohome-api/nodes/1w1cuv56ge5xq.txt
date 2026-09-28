@@ -1,0 +1,67 @@
+# Overview
+# type=article uri=/docs/Overview.md
+
+---
+stoplight-id: 1w1cuv56ge5xq
+---
+
+# Overview
+
+Welcome to the igloohome API documentation. igloohome is a revolutionary smart access solution that supports both online and offline access needs. Our patented algoPIN technology allows you to grant access without WiFi or cellular data.
+
+This API exposes a number of functionalities supported on the igloohome app such as:
+
+- algoPIN codes
+- Remote control via a Bridge
+- Notifications via Webhooks
+
+
+## HTTP Request Header Format
+
+| Key                | Value                   |
+|--------------------|-------------------------|
+| Authorization      | Bearer {access_token}   |
+| Content-Type       | application/json        |
+
+See [Getting Started](./67fb491f16f99-getting-started) on how to get an access token.
+
+The igloohome API supports JSON only. Set `Accept` and `Content-Type`
+to `application/json`.
+
+```http
+<METHOD> <URL> HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+```
+
+Example cURL:
+
+```curl
+curl -X POST -H "Authorization: Bearer {access_token}" -H "Content-Type: application/json"
+```
+
+## Architecture
+
+### Your server to our server
+
+```mermaid
+sequenceDiagram
+	Note over Your Server, Our Server: igloohome API
+	Your Server->>Our Server: HTTP Request
+	Our Server-->>Your Server: HTTP Response
+```
+
+### Bridge-connected devices
+
+```mermaid
+sequenceDiagram
+  Note over Your Server, Our Server: igloohome API
+  Your Server->>Our Server: Request
+  Note over Bridge, Our Server: WiFi
+  Our Server->>Bridge: Request
+  Note over Bridge, Device: Bluetooth
+  Bridge->>Device: Request
+  Device->>Bridge: Response
+  Bridge->>Our Server: Response
+  Our Server->>Your Server: Response
+```

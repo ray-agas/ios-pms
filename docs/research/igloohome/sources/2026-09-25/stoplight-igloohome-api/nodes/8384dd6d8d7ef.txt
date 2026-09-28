@@ -1,0 +1,95 @@
+# Supported Devices
+# type=article uri=/docs/API/01SupportedDevices.md
+
+---
+stoplight-id: 8384dd6d8d7ef
+---
+
+# Supported Devices on igloohome API V2
+
+## Overview
+
+The igloohome API V2 provides programmatic access to manage igloohome smart locks, keypads, bridges, and accessories. This reference guide covers all currently supported devices and their capabilities.
+
+### Prerequisites
+- Valid igloohome API credentials
+- Understanding of RESTful API concepts
+- Device must be registered in your igloohome account
+
+## Device ID
+
+Every igloohome device has a unique identifier called `deviceId`. This ID serves as the device's Bluetooth name and follows a specific 12-character format:
+
+### Format Structure
+
+`[PREFIX][BATCH][UNIQUE_ID]`
+
+
+| deviceId prefix          | Batch number           | Unique identifier          |
+| ------------------------ | ---------------------- | -------------------------- |
+| 4 characters             | 2 characters           | 6 characters               |
+| e.g. IGP1                | e.g. 01                | e.g. abc123                |
+
+### Examples
+```
+IGB403fe3b9d  // Deadbolt 2S from batch 03
+IGP1028de324  // Padlock from batch 02
+OE1X01cd3a5f  // Retrofit Lock from batch 01
+```
+
+## Device Type
+
+igloohome devices fall into four main categories:
+
+| Type   | Description |
+| ------ | ----------- |
+| Lock   | Smart locks for doors, gates, and secure storage |
+| Keypad | Standalone keypads for code entry |
+| Bridge | Connectivity hubs for remote access |
+| Fob    | Physical key fobs for device access |
+
+## Supported devices
+
+### Current Device Support
+
+The following devices are supported in API V2.
+
+> **Last updated:** July 16, 2025
+
+#### algoPIN Support
+Devices marked with algoPIN support can generate time-sensitive PIN codes for temporary access.
+
+#### Locks
+| Prefix | Device Name                  | algoPIN |
+| ------ | ---------------------------- | ------- |
+| DBX1   | Deadbolt Go (Satin Nickel)   | Yes |
+| DBX2   | Deadbolt Go (Matte Black)    | Yes |
+| IGB4   | Deadbolt 2S Metal Grey       | Yes |
+| IGB4A  | Deadbolt 2E                  | Yes |
+| IGK3   | Keybox 3                     | Yes |
+| IGM3   | Mortise 2                    | Yes |
+| IGM4   | Mortise 2+                   | Yes |
+| IGP1   | Padlock                      | Yes |
+| IGR1   | Rim Lock for Metal Gates     | Yes |
+| ML5X   | Smart Lever Mortise          | Yes |
+| MP1F   | Push-Pull Mortise            | Yes |
+| MT1X   | Mortise Touch                | Yes |
+| OE1X   | Retrofit Lock                | No |
+| RG1X   | Glass Door Lock              | Yes |
+| RM2F   | Gate Lock (with Fingerprint) | Yes |
+| RM2X   | Gate Lock                    | Yes |
+| RW1X   | Rim Lock for Wooden Doors    | Yes |
+| SK3E   | Keybox 3E                    | Yes |
+| SK4X   | Keybox 4                     | Yes |
+| SP1E   | Padlock E                    | Yes |
+| SP2E   | Padlock 2E                   | Yes |
+| SP2X   | Padlock 2                    | Yes |
+| SP3X   | Padlock 3                    | No |
+| SW1X   | Switch                       | No |
+
+#### Accessories
+| Prefix | Device Name | algoPIN |
+| ------ | ----------- | ------- |
+| EB1X   | Bridge      | No |
+| EK1X   | Keypad      | Yes |
+| IEF1   | Key Fob     | No |

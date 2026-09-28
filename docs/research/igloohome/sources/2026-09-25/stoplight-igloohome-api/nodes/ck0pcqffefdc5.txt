@@ -1,0 +1,275 @@
+# Remote Jobs for Locks (via Bridge)
+# type=article uri=/docs/Bridge API/proxied-bridge-job.md
+
+---
+stoplight-id: ck0pcqffefdc5
+---
+
+# Bridge Proxied Jobs
+
+Bridge Proxied Jobs enable you to send commands to smart locks through a Bridge device. This acts as an intermediary that communicates with locks via Bluetooth while your application communicates with the Bridge via the API.
+
+## Contents
+
+- [Job Creation](#job-creation)
+- [Command Details](#command-details)
+  - [Lock](#lock)
+  - [Unlock](#unlock)
+  - [Create Custom PIN code](#create-custom-pin-code)
+  - [Delete PIN code](#delete-pin-code)
+  - [Get Battery Level](#get-battery-level)
+  - [Get Device Status](#get-device-status)
+  - [Get Activity Logs](#get-activity-logs)
+- [Error Status Codes](#error-status-codes)
+
+## Job Creation
+
+Create a job by making a POST request to:
+
+```
+/devices/{deviceId}/jobs/bridges/{bridgeId}
+```
+
+[Try the API](https://igloocompany.stoplight.io/docs/igloohome-api/ae3e61e390eab-create-a-bridge-proxied-job)
+
+### Request Parameters
+
+| Parameter | Type   | Description |
+| --------- | ------ | ----------- |
+| jobType   | number | Command type identifier (see [Job Types](#job-types)) |
+| jobData   | object | Command-specific parameters |
+
+### Response
+
+```json
+{
+  "jobId": "string"
+}
+```
+
+### Job Types
+
+| Job Type                                | ID | Supported |
+| --------------------------------------- | -- | --------- |
+| Lock                                    | 1  | Yes       |
+| Unlock                                  | 2  | Yes       |
+| Edit Custom PIN code                    | 3  | No        |
+| Create Custom PIN code                  | 4  | Yes       |
+| Delete PIN code                         | 5  | Yes       |
+| Get Battery Level                       | 9  | Yes       |
+| Get Device Status                       | 10 | Yes       |
+| Set Maximum Incorrect PIN code Attempts | 14 | No        |
+| Get Activity Logs                       | 15 | Yes       |
+| Set Master PIN code                     | 16 | No        |
+| Revoke Bluetooth Guest Key              | 18 | No        |
+| Re-enable revoked Bluetooth Guest Key   | 19 | No        |
+| Delete RFID Card by UID                 | 24 | No        |
+| Delete Fingerprint by UID               | 29 | No        |
+
+## Command Details
+
+### Lock
+
+Locks the device and optionally synchronizes its internal clock.
+
+**Parameters**
+
+| Parameter | Type     | Description                  | Required |
+| --------- | -------- | ---------------------------- | -------- |
+| lockTime  | ISO_DATE | Synchronize the lock's clock | No       |
+
+**Request Example**
+
+```json
+{
+  "jobType": 1,
+  "jobData": {
+    "lockTime": "2024-01-01T12:00:00+00:00"
+  }
+}
+```
+
+### Unlock
+
+Unlocks the device and optionally synchronizes its internal clock.
+
+**Parameters**
+
+| Parameter | Type     | Description                  | Required |
+| --------- | -------- | ---------------------------- | -------- |
+| lockTime  | ISO_DATE | Synchronize the lock's clock | No       |
+
+**Request Example**
+
+```json
+{
+  "jobType": 2,
+  "jobData": {
+    "lockTime": "2024-01-01T12:00:00+00:00"
+  }
+}
+```
+
+### Create Custom PIN code
+
+Creates a PIN code with specific access permissions and time restrictions.
+<!-- theme: warning -->
+ > **Note:**
+ > Please refer to the [supported devices](../API/01SupportedDevices.md) docs for devices/locks supporting PIN.
+
+**Parameters**
+
+| Parameter  | Type   | Description                                          | Required |
+| ---------- | ------ | ---------------------------------------------------- | -------- |
+| accessName | string | Display name for the PIN code                        | Yes      |
+| pin        | string | 4-6 digit PIN code                                   | Yes      |
+| pinType    | number | PIN type (see table below)                           | Yes      |
+| startDate  | string | When PIN becomes active (ISO_DATE format)           | Yes      |
+| endDate    | string | When PIN expires (ISO_DATE format)                  | No       |
+
+**PIN Types**
+
+| Type      | ID | Description |
+| --------- | -- | ----------- |
+| One-Time  | 1  | Valid for 24 hours from start date |
+| Permanent | 2  | Valid indefinitely from start date |
+| Duration  | 4  | Valid between start and end dates |
+
+**Request Example**
+
+```json
+{
+  "jobType": 4,
+  "jobData": {
+    "accessName": "Guest PIN",
+    "pin": "123456",
+    "pinType": 4,
+    "startDate": "2024-01-01T12:00:00+00:00",
+    "endDate": "2024-01-01T16:00:00+00:00"
+  }
+}
+```
+
+**Usage Examples**
+
+```OTP title="One-Time PIN (24-hour validity):"
+{
+  "jobType": 4,
+  "jobData": {
+    "accessName": "OTP PIN",
+    "pin": "123456",
+    "pinType": 1,
+    "startDate": "2024-01-01T00:00:00+00:00"
+  }
+}
+```
+```Permanent title="Permanent PIN:"
+{
+  "jobType": 4,
+  "jobData": {
+    "accessName": "Permanent PIN",
+    "pin": "123456",
+    "pinType": 2,
+    "startDate": "2024-01-01T00:00:00+00:00"
+  }
+}
+```
+```Duration title="Duration PIN (specific time window):"
+{
+  "jobType": 4,
+  "jobData": {
+    "accessName": "Duration PIN",
+    "pin": "123456",
+    "pinType": 4,
+    "startDate": "2024-01-01T12:00:00+00:00",
+    "endDate": "2024-01-01T16:00:00+00:00"
+  }
+}
+```
+
+### Delete PIN code
+
+Removes a PIN code from the lock.
+
+> **Note**: Unactivated algoPINs can only be deleted within one week of their start time.
+
+**Parameters**
+
+| Parameter | Type   | Description             | Required |
+| --------- | ------ | ----------------------- | -------- |
+| pin       | string | PIN code to be deleted  | Yes      |
+
+**Request Example**
+
+```json
+{
+  "jobType": 5,
+  "jobData": {
+    "pin": "123456"
+  }
+}
+```
+
+### Get Battery Level
+
+Retrieves the lock's current battery level as a percentage.
+
+**Request Example**
+
+```json
+{
+  "jobType": 9
+}
+```
+
+### Get Device Status
+
+Queries the lock's current operational status.
+
+**Request Example**
+
+```json
+{
+  "jobType": 10
+}
+```
+
+### Get Activity Logs
+
+Downloads activity logs from the lock. Optionally synchronizes the lock's clock.
+
+> **Important**: Activity logs are deleted from the lock after retrieval.
+
+**Parameters**
+
+| Parameter | Type     | Description                  | Required |
+| --------- | -------- | ---------------------------- | -------- |
+| lockTime  | ISO_DATE | Synchronize the lock's clock | No       |
+
+**Request Example**
+
+```json
+{
+  "jobType": 15,
+  "jobData": {
+    "lockTime": "2024-01-01T12:00:00+00:00"
+  }
+}
+```
+
+## Error Status Codes
+
+| Status Code | Description                                           | Applies To                        |
+| ----------- | ----------------------------------------------------- | --------------------------------- |
+| 400         | `<field>` is required                                 | All                               |
+| 400         | `<field>` is invalid                                  | All                               |
+| 400         | `<field>` can only contain digits 0 to 9              | Custom PIN code Commands          |
+| 400         | `<field>` length must be 4 to 6 digits long           | Custom PIN code Commands          |
+| 400         | `<field>` must be in format YYYY-MM-DDTHH:mm:ss+hh:mm | Custom PIN code Commands          |
+| 400         | `<field>` must be now or after                        | Custom PIN code Commands          |
+| 400         | `<field>` must be after 'startDate'                   | Custom Duration PIN code Command  |
+| 401         | No valid API key and/or access token provided         | All                               |
+| 404         | The resource was not found                            | All                               |
+| 405         | Method not allowed                                    | All                               |
+| 406         | Bridge is offline                                     | All                               |
+| 415         | Unsupported media type                                | N/A                               |

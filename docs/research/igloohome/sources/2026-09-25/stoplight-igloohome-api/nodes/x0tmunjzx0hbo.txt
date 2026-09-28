@@ -1,0 +1,23 @@
+# Bridge overview (Remote Jobs)
+# type=article uri=/docs/Bridge API/bridge-api.md
+
+---
+stoplight-id: x0tmunjzx0hbo
+---
+
+# Bridge API Overview
+
+Bridge devices act as an intermediary between the internet and other devices, allowing for remote access. This can be used for proxied jobs - which target devices through the Bridge, or for jobs which target the Bridge itself.
+
+In addition, Bridge devices support Webhook event notifications for both types of jobs and automated heartbeat events. 
+
+<!-- * [Bridge Targeted Jobs](bridge-targeted-jobs.md) -->
+* [Bridge Proxied Jobs](proxied-bridge-job.md)
+<!-- * Webhook Events: -->
+  <!-- * [Bridge Automated Events](Webhook%20Event%20Notifications/webhook-automated.md) -->
+  <!-- * [Bridge Proxied Job Events](Webhook%20Event%20Notifications/webhook-proxied.md) -->
+  <!-- * [Bridge Targeted Job Events](Webhook%20Event%20Notifications/webhook-targeted.md) -->
+
+## Retrieving Job Status
+
+You may also wish to check the status of the jobs that were sent. This can be done by referencing the API [here](reference/igloohome-API.yaml/paths/~1jobs~1{jobId}/get).

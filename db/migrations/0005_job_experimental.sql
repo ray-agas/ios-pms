@@ -1,0 +1,1 @@
+ALTER TABLE "provider_jobs" ADD COLUMN "experimental" boolean DEFAULT false NOT NULL;

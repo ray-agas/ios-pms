@@ -1,0 +1,534 @@
+# Documentation
+# type=article uri=/docs/SDK-Documentation.md
+
+# SDK Documentation
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Plugin Setup](#plugin-setup)
+    - [Latest SDK Version](#latest-sdk-version)
+    - [Obtaining Gitlab Private Token](#obtaining-gitlab-private-token)
+    - [Android Setup](#android-setup)
+    - [iOS Setup](#ios-setup)
+3. [Methods Overview and Example](#methods-overview-and-example)
+    - [Initiation](#1-initiation)
+    - [Request Permission](#2-request-permission)
+    - [Unlock](#3-unlock)
+    - [Lock](#4-lock)
+    - [Sync](#5-sync)
+    - [Sync with Status](#6-sync-with-status)
+
+4. [Generating Access Token](#generating-access-token)
+
+5. [Example](#example)
+    
+---
+
+## Overview
+This document provides an overview of the Igloo plugin setup and method usage for both **Android** and **iOS** platforms.
+
+The following diagram illustrates the expected interaction flow between the user and the Igloo plugin during typical usage. While the diagram uses a single example use case for clarity, the flow is similiar for most bluetooth command.
+
+```mermaid
+sequenceDiagram
+autonumber
+actor user as User
+participant app as Your App 
+participant wrapper as Wrapper SDK 
+participant pServer as Your Server
+participant iServer as igloo Server
+
+participant lock as  igloo Locks
+user->>app: select lock to unlock
+activate app
+app->>pServer: get guestKey
+activate pServer
+pServer->>iServer: create guestKey
+activate iServer
+iServer-->>pServer: return guestKey
+deactivate iServer
+pServer-->>app: return guestKey
+deactivate pServer
+app->>wrapper: unlock using guestKey
+activate wrapper
+wrapper ->> wrapper: scan the lock
+wrapper ->> lock: form secure connection using guestKey
+activate lock
+lock-->> wrapper: connection result
+wrapper ->> lock: perform unlock command
+lock -->>  wrapper: unlock result
+deactivate lock
+wrapper -->>  app: unlock result
+deactivate wrapper
+app -->>  user: unlock result
+deactivate app
+```
+
+## Plugin Setup
+
+### Latest SDK Version
+Android: `1.1.0`
+
+iOS: `1.1.0`
+
+### Obtaining Gitlab Private Token
+
+The Android and iOS SDK is both published on private repository on Gitlab, thus Gitlab Private Token is required to use this SDK using Gradle & Private Pod.
+
+For IglooAccess, the Gitlab token can be generated directly from the IglooAccess Dashboard. 
+
+For IglooConnect Partner, please contact dev+support@igloocompany.co to request gitlab private token.
+
+### Android Setup
+#### 1. Add the plugin repository:
+   
+To add the plugin to your project repositories, please register the repository and credentials in `settings.gradle`.
+##### Groovy DSL
+Modify the `settings.gradle` to add `IglooPlugin`  repository url and the credentials
+```groovy
+repositories {
+    google()
+    mavenCentral()
+    maven {
+        url "https://gitlab.com/api/v4/projects/64441730/packages/maven"
+        name "GitLab"
+        credentials(PasswordCredentials) {
+            username = "Private-Token"
+            password = "Generated Personal Access Token"
+        }
+    }
+}
+```
+##### Kotlin DSL
+Modify the `settings.gradle.kts` to add `IglooPlugin`  repository url and the credentials
+  ```kotlin
+repositories {
+    google()
+    mavenCentral()
+    maven {
+        url = uri("https://gitlab.com/api/v4/projects/64441730/packages/maven")
+        name = "GitLab"
+        authentication {
+            create<BasicAuthentication>("basic")
+        }
+        credentials {
+            username = "Private-Token"
+            password = "Generated Personal Access Token"
+        }
+    }
+}
+```
+#### 2. Add the plugin dependency :
+#####  Groovy DSL
+add the plugin in your app `build.gradle`
+```groovy
+implementation 'co.igloo.access:sdk:<latest-sdk-version>'
+```
+#####  Kotlin DSL
+add the plugin in your app `build.gradle.kts`
+```kotlin
+implementation("co.igloo.access:sdk:<latest-sdk-version>")
+```
+
+#### 3. Add necessary permissions:
+To connect to igloohome server and igloohome lock. your app need to include this permission on  the `AndroidManifest.xml` file
+```xml
+<!-- Required for network communication, such as accessing web services. -->
+<uses-permission android:name="android.permission.INTERNET" />
+
+<!-- Required for establishing Bluetooth connections with other devices. -->
+<!-- This permission is introduced in Android 12 (API level 31). -->
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+<!-- Required for scanning for Bluetooth devices. -->
+<!-- This permission is introduced in Android 12 (API level 31). -->
+<!-- Use android:usesPermissionFlags="neverForLocation" if location is not needed -->
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
+<!-- Required for scanning for Bluetooth devices for Android below 11 below. -->
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+```
+
+#### 4. Add LockConnectionService to service manifest
+Add the `co.igloo.access.sdk.connection.LockConnectionService` to your `AndroidManifest.xml` file, under `<application>` tag
+```xml
+<application>
+    ... Rest of configuration
+    
+    <service android:name="co.igloo.access.sdk.connection.LockConnectionService" android:exported="false"/>
+</application>
+```
+
+---
+
+### iOS Setup
+#### 1. Add the plugin:
+
+##### Prerequisite
+
+Installing Igloo Access SDK requires several dependencies to be installed, including:
+- [Alamofire](https://github.com/Alamofire/Alamofire)
+- [ios-dfu-library](https://github.com/NordicSemiconductor/IOS-DFU-Library) (v4.14.0)
+- [RxBlutoothKit (forked)](https://gitlab.com/igloohome/rxbluetoothkit.git) (Tag 6.2.0)
+- [RxSwift](https://github.com/ReactiveX/RxSwift) (v6.6.0)
+- ZIPFoundation (included by `ios-dfu-library`)
+- [IgloohomeSDK](https://gitlab.com/igloohome/idp-ios-sdk-artifacts.git) (already included on this SDK).
+
+If your project use cocoapods, add the igloohome plugin in `Podfile` file
+```ruby
+pod 'IglooAccessSDK', :git => 'https://<GITLAB_USERNAME>:<ACCESS_TOKEN>@gitlab.com/igloohome/iglooaccess-ios-sdk.git', :tag => '<latest-sdk-version>'
+```
+
+Also add this configuration to the `post_install`:
+
+```ruby
+config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
+config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = "arm64"
+config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+```
+
+#### 2. Run the following command to install the pod:
+```bash
+pod install
+```
+---
+## Methods Overview and Example
+
+### 1. Initiation
+
+Initiate the plugin
+
+#### Android Example
+Example on plugin initiation on android
+```kotlin
+class MyApplication : Application() {
+    /**
+     * Instance of the IglooPlugin.
+     */
+    private lateinit var iglooPlugin: IglooPlugin
+    
+    override fun onCreate() {
+        super.onCreate()
+        // Initializes the `iglooPlugin` with the application context.
+        iglooPlugin = IglooPlugin(this.applicationContext)
+    }
+}  
+```
+
+#### IOS Example
+Example on plugin initiation on iOS
+```swift
+import IglooPluginSDK
+
+class MyViewModel: ObservableObject {
+    let iglooPlugin = IglooPlugin()
+}
+
+```
+
+---
+### 2. Request Permission
+To comunicate with the lock via bluetooth. your app need to request bluetooth permission.
+#### Android Example
+For Android 12 or above, permission `BLUETOOTH_SCAN` and `BLUETOOTH_CONNECT` are required.
+
+For Android 11 or below, permission `ACCESS_FINE_LOCATION` is required.
+
+This are example function to request above permission
+```kotlin
+private fun requestPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        ActivityCompat.requestPermissions(
+            this@MainActivity, arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT
+            ), 100
+        )
+    } else {
+        ActivityCompat.requestPermissions(
+            this@MainActivity, arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ), 100
+        )
+    }
+}
+```
+#### iOS Example
+
+On iOS there some permission need to be added before performing Bluetooth Connection: 
+
+1. Need to enable Background Mode for `CBCentralManager` for Uses Bluetooth LE Accessories.
+
+2. Need to adding key `NSBluetoothAlwaysUsageDescription` on `Info.plist`, because this SDK is using bluetooth to communicate with Igloohome Lock.
+
+---
+### 3. Unlock
+Unlock the device associated with the given Bluetooth device name.
+
+**Prerequisite**:
+- This function require runtime bluetooth permission. refer to [Request Permission](#3-request-permission) section
+
+**Parameter**:
+- **bluetoothDeviceName**: The name of the Bluetooth device to lock.
+- **key**: The bluetooth key for this bluetooth device
+- **timeInSeconds**:  Optional Integer of time in seconds.
+- **operationId**: Optional operation ID for tracking the request.
+
+**Throws**:
+- `IglooAccessException.BluetoothException(703)`: Bluetooth Operation Timeout
+- `IglooAccessException.ApiException(serverStatusCode)`: Error during requesting API
+- `IglooAccessException.GenericException`: Unhandled Error
+
+#### Android Example
+```kotlin
+lifecycleScope.launch {
+    try {
+        if (!isPermissionGranted()) {
+            requestPermission()
+            return@launch
+        }
+
+        val res = iglooPlugin.unlock("BLUETOOTH_DEVICE_NAME", "KEY")
+    } catch(e: Throwable) {
+        // Handle Error
+    }
+}
+```
+
+#### iOS Example
+
+```swift 
+do {
+    try await iglooPlugin.unlock("BLUETOOTH_DEVICE_NAME", "KEY")
+} catch {
+    // Handle Error
+}
+```
+
+### 4. Lock
+Locks the device associated with the given Bluetooth device name.
+
+**Prerequisite**:
+- This function require runtime bluetooth permission. refer to [Request Permission](#3-request-permission) section
+
+**Parameter**:
+- **bluetoothDeviceName**: The name of the Bluetooth device to lock.
+- **key**: The bluetooth key for this bluetooth device
+- **timeInSeconds**:  Optional Integer of time in seconds
+- **operationId**: Optional operation ID for tracking the request.
+
+**Throws**:
+
+- `IglooAccessException.BluetoothException(703)`: Bluetooth Operation Timeout
+- `IglooAccessException.ApiException(serverStatusCode)`: Error during requesting API
+- `IglooAccessException.GenericException`: Unhandled Error
+
+#### Example Android
+Example of unlock command usage
+```kotlin
+lifecycleScope.launch {
+    try {
+         if (!isPermissionGranted()) {
+            requestPermission()
+            return@launch
+        }
+
+        iglooPlugin.lock("BLUETOOTH_DEVICE_NAME", "KEY")
+    } catch(e: Throwable) {
+        // Handle Error
+    }
+}
+```
+
+#### Example IOS
+```swift
+do {
+    try await iglooPlugin.lock("BLUETOOTH_DEVICE_NAME", "KEY")
+} catch {
+    // Handler Error
+}
+```
+---
+
+### 5. Sync
+Sync the device associated with the given Bluetooth device name.
+
+**Notes:**
+- Sync will perform setTime command to update the lock time 
+- Sync will pull the batteryLevel of the lock, and store the battery level to the server
+- Sync will repeatedly pull the activity logs from the locks, store ig into local storage and store the activity logs to the server
+
+**Prerequisite**:
+- Require internet access to send activity logs to server
+- This function require runtime bluetooth permission. refer to [Request Permission](#3-request-permission) section
+- Access token for requesting Igloohome API. Generated token should only be valid for 1 scope
+
+**Parameter**:
+
+- **bluetoothDeviceName**: The name of the Bluetooth device to lock.
+- **key**: The bluetooth key for this bluetooth device
+- **getDevicesToken**: Access token for getting device information from Igloohome Server. Required scope: `igloohomeapi/get-devices` scope. See [Generate Access Token](#generating-access-token) for generating access token.
+- **storeLogsToken**: Access token for storing lock activity logs to Igloohome Server. Required scope: `igloohomeapi/store-device-activity`. See [Generate Access Token](#generating-access-token) for generating access token.
+- **updateDeviceToken**: Access token for update device to Igloohome Server. Required scope: `igloohomeapi/update-device`. See [Generate Access Token]
+- **timeInSeconds**:  Optional integer of time in seconds. will be use to set the lock time. if not provided time will automatically be pulled from server.
+- **operationId**: Optional operation ID for tracking the request.
+
+**Throws**:
+- `IglooAccessException.BluetoothException(703)`: Bluetooth Operation Timeout
+- `IglooAccessException.BluetoothException(708)`: Bluetooth service disabled
+- `IglooAccessException.ApiException(401)`: User unauthenticated
+- `IglooAccessException.ApiException(403)`: Forbidden, check token validity and scopes
+- `IglooAccessException.ApiException(serverStatusCode)`: Error during requesting API
+- `IglooAccessException.GenericException`: Unhandled Error
+
+#### Example Android
+```kotlin
+lifecycleScope.launch {
+    try {
+         if (!isPermissionGranted()) {
+            requestPermission()
+            return@launch
+        }
+
+        val syncResult = iglooPlugin.sync(
+            "BLUETOOTH_DEVICE_NAME", 
+            "KEY",
+            getDeviceToken = "GET DEVICE ACCESS TOKEN",
+            storeLogsToken = "STORE LOGS ACCESS TOKEN",
+            updateDeviceToken = "UPDATE DEVICE ACCESS TOKEN",
+        )
+    } catch(e: Throwable) {
+        // Handle Error
+    }
+}
+```
+#### Example IOS
+```swift
+do {
+    let syncResult = try await iglooPlugin.sync(
+        "BLUEOOTH_DEVICE_NAME", 
+        "KEY",
+        getDeviceToken: "GET DEVICE ACCESS TOKEN",
+        storeLogsToken: "STORE LOGS ACCESS TOKEN")
+} catch {
+    // Handle Error
+}
+```
+
+### 6. Sync with Status
+
+Sync the device associated with the given Bluetooth device name. Unlike the standard Sync, this method ensures all sub-processes are attempted regardless of individual failures and provides a detailed status report for each.
+
+Differences from Sync:
+
+- Non-terminating Process: If one command fails (e.g., setTime fails due to a timeout), the function does not crash or stop. It will continue to attempt the batteryLevel pull and activityLog retrieval.
+
+- Granular Output: Returns result object indicating the Success or Failure status of each internal process.
+
+**Notes:**
+- Sync will perform setTime command to update the lock time 
+- Sync will pull the batteryLevel of the lock, and store the battery level to the server
+- Sync will repeatedly pull the activity logs from the locks, store ig into local storage and store the activity logs to the server
+
+**Parameters**
+- **bluetoothDeviceName**: The name of the Bluetooth device to lock.
+- **key**: The bluetooth key for this bluetooth device
+- **getDevicesToken**: Access token for getting device information from Igloohome Server. Required scope: `igloohomeapi/get-devices` scope. See [Generate Access Token](#generating-access-token) for generating access token.
+- **storeLogsToken**: Access token for storing lock activity logs to Igloohome Server. Required scope: `igloohomeapi/store-device-activity`. See [Generate Access Token](#generating-access-token) for generating access token.
+- **updateDeviceToken**: Access token for update device to Igloohome Server. Required scope: `igloohomeapi/update-device`. See [Generate Access Token](#generating-access-token) for generating access token.
+- **timeInSeconds**:  Optional integer of time in seconds. will be use to set the lock time. if not provided time will automatically be pulled from server.
+- **operationId**: Optional operation ID for tracking the request.
+
+**Throws**
+- `IglooAccessException.BluetoothException(708)`: Bluetooth service disabled
+- `IglooAccessException.GenericException`: Unhandled Error
+
+Example Android
+
+```kotlin
+try {
+    iglooPlugin.syncWithStatus(
+        "BLUETOOTH_DEVICE_NAME",
+        "BLUETOOTH_KEY",
+        timeInSeconds = <EPOCH IN SECONDS>,
+        getDeviceToken = "GET_DEVICE_TOKEN",
+        storeLogsToken = "STORE_LOGS_TOKEN",
+        updateDeviceToken = "UPDATE_DEVICE_TOKEN",
+    )
+        .onCompletion {
+            // Do something when process completed
+        }
+        .catch { error ->
+            // Do something when error
+        }
+        .collect { status ->
+            if (status.isSuccess) {
+                // Do something when the sub process success
+            } else {
+                // Do something when the sub process error
+            }
+        }
+} catch (e: Throwable) {
+    // Handle error
+}
+```
+
+```swift
+for await item in api.syncWithStatus(
+    "BLUETOOTH_DEVICE_NAME",
+    key: "BLUETOOTH_KEY",
+    getDeviceToken: "GET_DEVICE_TOKEN",
+    storeLogsToken: "STORE_LOGS_TOKEN",
+    updateDeviceToken: "UPDATE_DEVICE_TOKEN"
+) {
+    if item.isSuccess {
+        // Do something when the sub process success
+    } else {
+        // Do something when the sub process error
+    }
+}
+```
+
+---
+## Generating Access Token
+Make `POST` request to `https://auth.igloohome.co/oauth2/token`
+
+### API Service URL
+`https://auth.igloohome.co/`
+
+### HTTP Request Header
+| Key                   | Value                                     |
+|---                    |---                                        |
+| `Content-Type`        | `application/x-www-form-urlencoded`       |
+| `Authorization`       | `Basic {base64(clientId:clientSecret)}`   |
+
+
+### Query Parameter
+| Key                   | Value                                     |
+|---                    |---                                        |
+| `grant_type`          | `client_credentials`                      |
+| `scope`              | `{insert single scope}`                   |
+
+### Example cURL
+```sh
+curl --location --request POST 'https://auth.igloohome.co/oauth2/token?grant_type=client_credentials&scope=igloohomeapi%2Fstore-device-activity' \
+--header 'Authorization: Basic VGhpcyBpcyBiYXNlNjQgZW5jb2RlZCBjbGllbnQgSUQgYW5kIGNsaWVudCBzZWNyZXQgZm9ybWF0dGVkIGFzIGBjbGllbnRJZDpjbGllbnRTZWNyZXRgIChqb2luZWQgYnkgOiBzeW1ib2wp' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+```
+
+### Relevant Scope
+- `igloohomeapi/get-devices`
+- `igloohomeapi/store-device-activity`
+- `igloohomeapi/update-device`
+
+--- 
+## Example
+
+To see a working example of the project, clone the repository using your gitlab private token.
+
+```
+git clone https://gitlab:<your_gitlab_private_token>@gitlab.com/igloohome/iglooaccess-android-sdk.git
+
+git clone https://gitlab:<your_gitlab_private_token>@gitlab.com/igloohome/iglooaccess-ios-sdk.git
+```
+
+> This project uses the SDK module as a local dependency. For real implementation in your own app, please refer to the setup guide above.

@@ -1,0 +1,447 @@
+{
+  "_note": "Real igloohome responses captured 2026-09-25 (EXP-20260925-01). Sanitized: device/property/internal IDs replaced, clientId/userRef/tokens redacted. Evidence: API.",
+  "serverHealth": {
+    "step": "E2 server-health primary",
+    "path": "/igloohome/server-health",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "body": {
+      "isAdminLogin": false,
+      "userRef": "[REDACTED]",
+      "clientId": "[REDACTED]",
+      "clientName": "Bobobox IoT Backend",
+      "flow": "client_credentials",
+      "scopes": [
+        "igloohomeapi/get-job-status",
+        "igloohomeapi/get-properties",
+        "igloohomeapi/get-device-activity",
+        "igloohomeapi/get-devices"
+      ],
+      "tier": "TRIAL",
+      "endsAt": "2026-10-17T00:00:00.000Z"
+    }
+  },
+  "deviceList": {
+    "step": "E3 list devices",
+    "path": "/igloohome/devices?limit=300",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "body": {
+      "nextCursor": "",
+      "payload": [
+        {
+          "id": "devint-EB1X••••••46",
+          "type": "Bridge",
+          "deviceId": "EB1X••••••46",
+          "deviceName": "bridge-lab",
+          "pairedAt": "2026-09-18T07:43:59+00:00",
+          "homeId": [],
+          "linkedDevices": [
+            {
+              "id": "devint-DBX2••••••29",
+              "type": "Lock",
+              "deviceId": "DBX2••••••29"
+            }
+          ]
+        },
+        {
+          "id": "devint-DBX2••••••29",
+          "type": "Lock",
+          "deviceId": "DBX2••••••29",
+          "deviceName": "darderdoor",
+          "batteryLevel": 60,
+          "pairedAt": "2026-09-18T06:50:18+00:00",
+          "homeId": [
+            "PROP-1"
+          ],
+          "linkedDevices": []
+        },
+        {
+          "id": "devint-EB1X••••••32",
+          "type": "Bridge",
+          "deviceId": "EB1X••••••32",
+          "deviceName": "bridge",
+          "pairedAt": "2026-09-18T03:23:38+00:00",
+          "homeId": [],
+          "linkedDevices": [
+            {
+              "id": "devint-EK2X••••••81",
+              "type": "Keypad",
+              "deviceId": "EK2X••••••81"
+            },
+            {
+              "id": "devint-SW1X••••••30",
+              "type": "Lock",
+              "deviceId": "SW1X••••••30"
+            },
+            {
+              "id": "devint-EK2X••••••81",
+              "type": "Lock",
+              "deviceId": "IGB4••••••d0"
+            }
+          ]
+        },
+        {
+          "id": "devint-EK2X••••••81",
+          "type": "Lock",
+          "deviceId": "IGB4••••••d0",
+          "deviceName": "Doorlock",
+          "batteryLevel": 100,
+          "pairedAt": "2026-09-16T12:01:48+00:00",
+          "homeId": [
+            "PROP-2"
+          ],
+          "linkedDevices": []
+        },
+        {
+          "id": "devint-EK2X••••••81",
+          "type": "Keypad",
+          "deviceId": "EK2X••••••81",
+          "deviceName": "Keypad-Bedlock",
+          "batteryLevel": 100,
+          "pairedAt": "2026-09-16T11:58:51+00:00",
+          "homeId": [
+            "PROP-2"
+          ],
+          "linkedDevices": [
+            {
+              "id": "devint-SW1X••••••30",
+              "type": "Lock",
+              "deviceId": "SW1X••••••30"
+            }
+          ]
+        },
+        {
+          "id": "devint-SW1X••••••30",
+          "type": "Lock",
+          "deviceId": "SW1X••••••30",
+          "deviceName": "switch-bedlock",
+          "batteryLevel": 100,
+          "pairedAt": "2026-09-16T11:43:07+00:00",
+          "homeId": [
+            "PROP-2"
+          ],
+          "linkedDevices": []
+        }
+      ]
+    }
+  },
+  "supportPins": {
+    "step": "E3 support-pins",
+    "path": "/igloohome/devices/support-pins?limit=300",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "body": {
+      "nextCursor": "",
+      "payload": [
+        {
+          "id": "devint-DBX2••••••29",
+          "type": "Lock",
+          "deviceId": "DBX2••••••29",
+          "deviceName": "darderdoor",
+          "batteryLevel": 60,
+          "pairedAt": "2026-09-18T06:50:18+00:00",
+          "homeId": [
+            "PROP-1"
+          ],
+          "linkedDevices": []
+        },
+        {
+          "id": "devint-EK2X••••••81",
+          "type": "Lock",
+          "deviceId": "IGB4••••••d0",
+          "deviceName": "Doorlock",
+          "batteryLevel": 100,
+          "pairedAt": "2026-09-16T12:01:48+00:00",
+          "homeId": [
+            "PROP-2"
+          ],
+          "linkedDevices": []
+        },
+        {
+          "id": "devint-EK2X••••••81",
+          "type": "Keypad",
+          "deviceId": "EK2X••••••81",
+          "deviceName": "Keypad-Bedlock",
+          "batteryLevel": 100,
+          "pairedAt": "2026-09-16T11:58:51+00:00",
+          "homeId": [
+            "PROP-2"
+          ],
+          "linkedDevices": [
+            {
+              "id": "devint-SW1X••••••30",
+              "type": "Lock",
+              "deviceId": "SW1X••••••30"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "deviceDetails": [
+    {
+      "step": "E3 device detail EB1X••••••46",
+      "path": "/igloohome/devices/EB1X••••••46",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "id": "devint-EB1X••••••46",
+        "type": "Bridge",
+        "deviceId": "EB1X••••••46",
+        "deviceName": "bridge-lab",
+        "pairedAt": "2026-09-18T07:43:59+00:00",
+        "linkedDevices": [
+          {
+            "id": "devint-DBX2••••••29",
+            "type": "Lock",
+            "deviceId": "DBX2••••••29"
+          }
+        ],
+        "lastSync": "2026-09-18T07:43:59.495Z"
+      }
+    },
+    {
+      "step": "E3 device detail DBX2••••••29",
+      "path": "/igloohome/devices/DBX2••••••29",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "id": "devint-DBX2••••••29",
+        "type": "Lock",
+        "deviceId": "DBX2••••••29",
+        "deviceName": "darderdoor",
+        "batteryLevel": 60,
+        "pairedAt": "2026-09-18T06:50:18+00:00",
+        "lockStatus": "LOCKED",
+        "homeId": [
+          "PROP-1"
+        ],
+        "linkedDevices": [],
+        "lastSync": "2026-09-24T10:07:08.000Z"
+      }
+    },
+    {
+      "step": "E3 device detail EB1X••••••32",
+      "path": "/igloohome/devices/EB1X••••••32",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "id": "devint-EB1X••••••32",
+        "type": "Bridge",
+        "deviceId": "EB1X••••••32",
+        "deviceName": "bridge",
+        "pairedAt": "2026-09-18T03:23:38+00:00",
+        "linkedDevices": [
+          {
+            "id": "devint-EK2X••••••81",
+            "type": "Keypad",
+            "deviceId": "EK2X••••••81"
+          },
+          {
+            "id": "devint-SW1X••••••30",
+            "type": "Lock",
+            "deviceId": "SW1X••••••30"
+          },
+          {
+            "id": "devint-EK2X••••••81",
+            "type": "Lock",
+            "deviceId": "IGB4••••••d0"
+          }
+        ],
+        "lastSync": "2026-09-18T03:23:38.549Z"
+      }
+    },
+    {
+      "step": "E3 device detail IGB4••••••d0",
+      "path": "/igloohome/devices/IGB4••••••d0",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "id": "devint-EK2X••••••81",
+        "type": "Lock",
+        "deviceId": "IGB4••••••d0",
+        "deviceName": "Doorlock",
+        "batteryLevel": 100,
+        "pairedAt": "2026-09-16T12:01:48+00:00",
+        "lockStatus": "UNLOCKED",
+        "homeId": [
+          "PROP-2"
+        ],
+        "linkedDevices": [],
+        "lastSync": "2026-09-25T05:35:04.000Z"
+      }
+    },
+    {
+      "step": "E3 device detail EK2X••••••81",
+      "path": "/igloohome/devices/EK2X••••••81",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "id": "devint-EK2X••••••81",
+        "type": "Keypad",
+        "deviceId": "EK2X••••••81",
+        "deviceName": "Keypad-Bedlock",
+        "batteryLevel": 100,
+        "pairedAt": "2026-09-16T11:58:51+00:00",
+        "homeId": [
+          "PROP-2"
+        ],
+        "linkedDevices": [
+          {
+            "id": "devint-SW1X••••••30",
+            "type": "Lock",
+            "deviceId": "SW1X••••••30"
+          }
+        ],
+        "lastSync": "2026-09-24T16:49:22.000Z"
+      }
+    },
+    {
+      "step": "E3 device detail SW1X••••••30",
+      "path": "/igloohome/devices/SW1X••••••30",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "id": "devint-SW1X••••••30",
+        "type": "Lock",
+        "deviceId": "SW1X••••••30",
+        "deviceName": "switch-bedlock",
+        "batteryLevel": 100,
+        "pairedAt": "2026-09-16T11:43:07+00:00",
+        "lockStatus": "UNLOCKED",
+        "homeId": [
+          "PROP-2"
+        ],
+        "linkedDevices": [],
+        "lastSync": "2026-09-25T05:36:36.000Z"
+      }
+    }
+  ],
+  "properties": {
+    "step": "E4 list properties",
+    "path": "/igloohome/properties?limit=300",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "body": {
+      "nextCursor": "",
+      "payload": [
+        {
+          "id": "PROP-1",
+          "name": "lab-oce",
+          "timezone": "Asia/Jakarta"
+        },
+        {
+          "id": "PROP-2",
+          "name": "oc-bbx",
+          "timezone": "Asia/Jakarta"
+        }
+      ]
+    }
+  },
+  "propertyDetail": {
+    "step": "E4 property detail #1",
+    "path": "/igloohome/properties/PROP-1",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "body": {
+      "payload": {
+        "id": "PROP-1",
+        "name": "lab-oce",
+        "timezone": "Asia/Jakarta"
+      }
+    }
+  },
+  "propertyDevices": [
+    {
+      "step": "E4 property devices #1",
+      "path": "/igloohome/properties/PROP-1/devices?limit=300",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "nextCursor": "",
+        "payload": [
+          {
+            "id": "devint-DBX2••••••29",
+            "type": "Lock",
+            "deviceId": "DBX2••••••29",
+            "deviceName": "darderdoor",
+            "batteryLevel": 60,
+            "pairedAt": "2026-09-18T06:50:18+00:00",
+            "homeId": [
+              "PROP-1"
+            ],
+            "linkedDevices": []
+          }
+        ]
+      }
+    },
+    {
+      "step": "E4 property devices #2",
+      "path": "/igloohome/properties/PROP-2/devices?limit=300",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "nextCursor": "",
+        "payload": [
+          {
+            "id": "devint-EK2X••••••81",
+            "type": "Lock",
+            "deviceId": "IGB4••••••d0",
+            "deviceName": "Doorlock",
+            "batteryLevel": 100,
+            "pairedAt": "2026-09-16T12:01:48+00:00",
+            "homeId": [
+              "PROP-2"
+            ],
+            "linkedDevices": []
+          },
+          {
+            "id": "devint-EK2X••••••81",
+            "type": "Keypad",
+            "deviceId": "EK2X••••••81",
+            "deviceName": "Keypad-Bedlock",
+            "batteryLevel": 100,
+            "pairedAt": "2026-09-16T11:58:51+00:00",
+            "homeId": [
+              "PROP-2"
+            ],
+            "linkedDevices": [
+              {
+                "id": "devint-SW1X••••••30",
+                "type": "Lock",
+                "deviceId": "SW1X••••••30"
+              }
+            ]
+          },
+          {
+            "id": "devint-SW1X••••••30",
+            "type": "Lock",
+            "deviceId": "SW1X••••••30",
+            "deviceName": "switch-bedlock",
+            "batteryLevel": 100,
+            "pairedAt": "2026-09-16T11:43:07+00:00",
+            "homeId": [
+              "PROP-2"
+            ],
+            "linkedDevices": []
+          }
+        ]
+      }
+    }
+  ],
+  "activityForbidden": {
+    "step": "E4 activity EB1X••••••46",
+    "path": "/igloohome/devices/EB1X••••••46/activity?limit=20",
+    "status": 403,
+    "contentType": "text/plain; charset=utf-8",
+    "body": "Forbidden"
+  },
+  "masterPinWithoutScope": {
+    "step": "E4b masterpin without scope",
+    "path": "/igloohome/devices/DBX2••••••29/masterpin",
+    "status": 403,
+    "contentType": "text/plain; charset=utf-8",
+    "body": "Forbidden"
+  }
+}

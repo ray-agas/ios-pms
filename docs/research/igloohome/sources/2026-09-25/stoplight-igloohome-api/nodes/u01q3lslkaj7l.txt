@@ -1,0 +1,227 @@
+# Bridge Automated Events
+# type=article uri=/docs/Bridge API/Webhook Event Notifications/webhook-automated.md
+
+---
+stoplight-id: u01q3lslkaj7l
+---
+
+# Bridge Automated Events
+
+These events are caused by the bridge device itself and occur automatically without user intervention.
+
+| Event Type                                            | Number Mapping |
+| ----------------------------------------------------- | -------------- |
+| [Job Complete](#job-complete-event)                   | 3              |
+| [Activity Log Received](#activity-log-received-event) | 5              |
+| [Bridge Connection](#bridge-connection-event)         | 10             |
+
+## Job Complete Event
+
+### Expected Payload
+
+```json
+{
+  "payload": {
+    "event": {
+      // ID for this webhook event
+      "id": "string",
+      // Always 3 for Job Complete events
+      "type": 3,
+      "data": {
+        "jobId": "string",
+        // Status code (see Job Status Codes below)
+        "jobStatus": 0
+        ...job specific data
+      },
+      // ISO 8601 timestamp of job completion
+      "date": "ISODATE",
+      "proxyTransportMethod": 2,
+      // Bridge device ID that relayed the command
+      "proxyId": "string"
+    },
+    "product": {
+      // Target lock device ID
+      "id": "string",
+      "type": 1
+    }
+  }
+}
+```
+
+### Job Specific Data
+
+For job specific data please refer to [job specific data](job-specific-webhook-data.md)
+
+### Job Status Codes
+
+| Code | Status                    | Description                                          |
+| ---- | ------------------------- | ---------------------------------------------------- |
+| `0`  | **Success**               | Job completed successfully                           |
+| `1`  | **Generic Error**         | Job failed due to generic error                      |
+| `2`  | **Operation In Progress** | Another operation is currently running on the device |
+
+### Supported Job Types
+
+The following job types will trigger Job Complete Event webhooks:
+
+| Job Type ID | Operation Name        | Description                              |
+| ----------- | --------------------- | ---------------------------------------- |
+| `1`         | **Lock**              | Engage the lock mechanism                |
+| `2`         | **Unlock**            | Disengage the lock mechanism             |
+| `4`         | **Create PIN**        | Add a new custom PIN code to the device  |
+| `5`         | **Delete PIN**        | Remove an existing custom PIN code       |
+| `9`         | **Get Battery Level** | Retrieve current battery percentage      |
+| `10`        | **Get Status**        | Fetch current lock state and diagnostics |
+| `15`        | **Get Logs**          | Get device activity logs                 |
+
+## Activity Log Received Event
+
+### Expected Payload
+
+```json
+payload: {
+    event: {
+        id: string,
+        type: 5,
+        data: {
+            activityLogs: [ // Array of lock activity objects
+                { // Lock activity object 1
+                    logType: number,
+                    entryDate: number, // epoch seconds
+                    operationId: number,
+                    keyId: number,
+                    pin?: string,
+                    newPin?: string,
+                    pinType?: number,
+                    value1?: number,
+                    value2?: number,
+                    value3?: number,
+                    value4?: number,
+                    value5?: number,
+                    time1?: number,
+                    time2?: number
+                },
+                // More lock activity objects
+                {...},
+                {...}
+            ]
+        },
+        date: ISO_DATE,
+        proxyTransportMethod: 2,
+        accessoryId: string
+    },
+    product: {
+        id: string,
+        type: 1
+    }
+}
+```
+
+### Event Fields
+
+Every lock event will have the following common fields:
+
+| Common Field | Description                                                                                                                                                     |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| logType      | An integer indicating the type of event                                                                                                                         |
+| entryDate    | The time since UNIX epoch in seconds that the event occurred                                                                                                    |
+| keyId        | Identifier of the Bluetooth Guest key used for guest operations, or 0 if it was an event initiated via a Bluetooth Admin key or via the lock's keypad           |
+| operationId  | An identifier of the Bluetooth command operation that generated this activity log, or undefined if there was no operationId defined for that particular command |
+
+Additionally, some log types are populated with additional fields:
+
+| Log Type | Translation                                                                               | Additional Fields | Description                                                                             |
+| -------- | ----------------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------- |
+| 11       | Bluetooth unlock                                                                          | N/A               | N/A                                                                                     |
+| 13       | Bluetooth set time                                                                        | time1             | The time the clock was set to                                                           |
+| 14       | Change volume via keypad                                                                  | value1            | Previous volume                                                                         |
+|          |                                                                                           | value2            | New volume                                                                              |
+| 15       | Change volume via Bluetooth                                                               | value1            | Previous volume                                                                         |
+|          |                                                                                           | value2            | New volume                                                                              |
+| 16       | Wrong PIN                                                                                 | pin               | The wrong PIN that was attempted                                                        |
+| 17       | PIN exceeded maximum length                                                               | pin               | The PIN that was attempted                                                              |
+| 18       | Unlock with master PIN                                                                    | pin               | The master PIN                                                                          |
+| 19       | Unlock with generated PIN previously used at least once (permanent, duration, weekly etc) | pin               | The PIN used to unlock                                                                  |
+| 20       | Use a one-time PIN                                                                        | pin               | The PIN that was used                                                                   |
+| 21       | Use a permanent PIN for the first time                                                    | pin               | The PIN that was used                                                                   |
+| 22       | Use a duration PIN for the first time                                                     | pin               | The PIN that was used                                                                   |
+| 23       | Use a weekly PIN for the first time                                                       | pin               | The PIN that was used                                                                   |
+| 24       | Use a monthly PIN for the first time                                                      | pin               | The PIN that was used                                                                   |
+| 25       | Use a weekday PIN for the first time                                                      | pin               | The PIN that was used                                                                   |
+| 26       | Use a weekend PIN for the first time                                                      | pin               | The PIN that was used                                                                   |
+| 27       | Create a new PIN via Bluetooth                                                            | pin               | The PIN that was used                                                                   |
+|          |                                                                                           | time1             | Start time, if it was sent via Bluetooth                                                |
+|          |                                                                                           | time2             | End time, if it was sent via Bluetooth                                                  |
+|          |                                                                                           | pinType           | The type of PIN used                                                                    |
+| 28       | Change PIN via keypad                                                                     | pin               | The original PIN                                                                        |
+|          |                                                                                           | newPin            | The new PIN it is changed to                                                            |
+| 29       | Change PIN via Bluetooth                                                                  | pin               | The original PIN                                                                        |
+|          |                                                                                           | newPin            | The new PIN it is changed to, if it was sent via Bluetooth                              |
+|          |                                                                                           | time1             | Start time, if it was sent via Bluetooth                                                |
+|          |                                                                                           | time2             | End time, if it was sent via Bluetooth                                                  |
+|          |                                                                                           | pinType           | The type of PIN it is set to, if it was sent via Bluetooth                              |
+| 30       | Delete PIN via keypad                                                                     | pin               | The PIN that was deleted                                                                |
+| 31       | Delete PIN via Bluetooth                                                                  | pin               | The PIN that was deleted                                                                |
+| 32       | Change Master PIN                                                                         | pin               | The old master PIN                                                                      |
+|          |                                                                                           | newPin            | The new master PIN                                                                      |
+| 33       | Change auto-relock via keypad                                                             | value1            | Time of timer autorelock in seconds                                                     |
+|          |                                                                                           | value2            | Time of sensor autorelock in seconds                                                    |
+| 34       | Change auto-relock via Bluetooth                                                          | value1            | Time of sensor autorelock in seconds, or 0 if disabled                                  |
+| 35       | Change incorrect PIN lockout count via keypad                                             | value1            | Previous value of incorrect PIN lockout count                                           |
+|          |                                                                                           | value2            | New value of incorrect PIN lockout count                                                |
+| 36       | Change incorrect PIN lockout count via Bluetooth                                          | value1            | Previous value of incorrect PIN lockout count, or 0 if disabled                         |
+|          |                                                                                           | value2            | New value of incorrect PIN lockout count, or 0 if disabled                              |
+| 37       | Bluetooth lock                                                                            | N/A               | N/A                                                                                     |
+| 38       | Enable auto-unlock                                                                        | value1            | 1 if enabled, 0 if disabled                                                             |
+|          |                                                                                           | value2            | Minimum RSSI to unlock when touched, actual RSSI value = value2 + 256                   |
+| 39       | Blacklist Bluetooth Guest key                                                             | value3            | Guest key id                                                                            |
+| 40       | Unblacklist Bluetooth Guest key                                                           | value3            | Guest key id                                                                            |
+| 41       | Change daylight savings time                                                              | N/A               | N/A                                                                                     |
+| 42       | Add key card                                                                              | value5            | Card UID                                                                                |
+| 43       | Key card unlock                                                                           | value5            | Card UID                                                                                |
+| 44       | Delete key card                                                                           | value5            | Card UID                                                                                |
+| 45       | Set LED brightness                                                                        | value1            | Brightness                                                                              |
+| 46       | Set relock alarm                                                                          | value1            | Time before alarm sounds after opening in seconds, or 0 if disabled                     |
+| 47       | Auto-relock lock (after opening and closing the lock)                                     | N/A               | N/A                                                                                     |
+| 48       | Auto-relock lock (without first opening the lock)                                         | N/A               | N/A                                                                                     |
+| 49       | Lock via keypad/button                                                                    | N/A               | N/A                                                                                     |
+| 50       | Unlock via button                                                                         | N/A               | N/A                                                                                     |
+| 51       | Lock with key/thumbturn                                                                   | N/A               | N/A                                                                                     |
+| 52       | Unlock with key/thumbturn                                                                 | N/A               | N/A                                                                                     |
+| 53       | Attempted break-in                                                                        | N/A               | N/A                                                                                     |
+| 54       | Add fingerprint                                                                           | value2            | Fingerprint UID                                                                         |
+| 55       | Delete fingerprint                                                                        | value2            | Fingerprint UID                                                                         |
+| 56       | Fingerprint unlock                                                                        | value1            | 0 if unlock was successful, if not successful, refer to Bluetooth commands result codes |
+|          |                                                                                           | value2            | Fingerprint UID (null if the unlock attempt was unsuccessful)                           |
+| 57       | Invalid key card unlock attempt                                                           | value5            | Card UID                                                                                |
+
+## Bridge Connection Event
+
+Sent when a Bridge (EB1X) connects to or disconnects from the server. This webhook indicates the bridge's current online state and can be used to update device status, trigger alerts, or drive automation when connectivity changes.
+
+### Expected Payload
+
+```json
+{
+  "payload": {
+    "event": {
+      // ID for this webhook event
+      "id": "string",
+      // Always 10 for Bridge Connection events
+      "type": 10,
+      "data": {
+        // true = bridge is online (connected); false = bridge is offline (disconnected)
+        "isOnline": true
+      },
+      // ISO 8601 timestamp of the connectivity state change
+      "date": "ISODATE",
+      "proxyTransportMethod": 2
+    },
+    "product": {
+      // The bridge device ID
+      "id": "string",
+      "type": 1
+    }
+  }
+}
+```

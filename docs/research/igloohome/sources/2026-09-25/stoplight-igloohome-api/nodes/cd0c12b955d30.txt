@@ -1,0 +1,129 @@
+# Webhook Security
+# type=article uri=/docs/Bridge API/Webhook Event Notifications/webhook-security.md
+
+# Webhook Security
+
+For security, each webhook request sent contain its own signature in the header. A public key obtained from the portal or our support team can be used to validate the signature to ensure the authenticity of the request.
+
+> **Important:** Make sure your server accept POST requests, as all our webhook notifications are sent via POST.
+
+## Setting up your webhook URL
+
+### iglooaccess partner
+Add your webhook URL on our **[iglooaccess](https://access.igloocompany.co/webhooks)** portal in the **Webhooks** section.
+
+### iglooconnect partner
+To get your webhook URL set up, drop us an email at **[dev+support@igloocompany.co](mailto:dev+support@igloocompany.co?subject=Webhook%20URL%20Request%20-%20Iglooconnect%20Partner)**. We'll add your URL right away.
+
+*Just like iglooaccess, we're building iglooconnect portal where you'll be able to manage your webhook URLs yourself. Stay tuned!*
+
+
+## Contents
+
+- [Signature Process](#signature-process)
+- [Signature Validation](#signature-validation)
+  - [Signed Data construction](#signed-data-construction)
+  - [HMAC process](#hmac-process)
+  - [Signature Validation](#signature-validation)
+    - [Public Key](#public-key)
+- [Working Example](#working-example)
+
+## Signature Process
+
+Parts of the webhook request is passed through HMAC, where the resulting digest is signed using our RSA private key.
+
+## Webhook Request Validation
+
+Assuming you received the following HTTPS request:
+
+```txt
+POST /example/path HTTP/1.1
+Host: example-host.com
+Date: Sat, 20 Jun 2015 12:34:56 GMT
+Accept: application/json
+Content-Type: application/json
+Content-Length: 29
+x-igloocompany-sha256: "QA...=="
+
+{ "payload": "example payload" }
+```
+
+The webhook request signature is indicated by the header "x-igloocompany-sha256" and its contents are encoded in base64.
+
+### Signed Data construction
+
+You first construct the signed data using the following information extracted from the request in order:
+
+1. Method (all uppercase)
+2. Host
+3. URL Path
+4. Content Type
+5. Date
+6. Body
+
+Each item must be concatenated and delimited using the bar ("`|`") character.
+
+The following example shows the final concatenated payload:
+
+```txt
+'POST|example-host.com|/example/path|application/json|Sat, 20 Jun 2015 12:34:56 GMT|{"payload":"example"}'
+```
+
+### HMAC Process
+
+The constructed signed data can then be hashed using HMAC with the _SHA-256_ hashing algorithm, giving you the **HMAC digest**.
+
+### Signature Validation
+
+Upon acquiring the HMAC digest of the signed data, you may proceed with validating its signature extracted from the header and decoded. The hash algorithm used in the signature validation is _SHA-256_.
+
+### Public key
+
+Public key properties:
+
+- Length: 2048
+- Cipher: RSA
+- Format: DER
+- Type: PKCS1
+
+_Note:  Contact our support **[dev+support@igloocompany.co](mailto:dev+support@igloocompany.co?subject=Public%20Key%20Request%20-%20Iglooconnect%20Partner)** for acquiring public key. Public key acquired is encoded in base64._
+
+## Working Example
+
+Here is a source code in _Node.js_ that performs signature validation of an example payload with a sample public key using the `crypto` library ("v16.X LTS" at the time of writing).
+
+```js
+// Using nodejs crypto library.
+import * as crypto from 'crypto';
+
+// The example payload that we'll be validating.
+const payload = 'POST|example-host.com|/example/path|application/json|Sat, 20 Jun 2015 12:34:56 GMT|{"payload":"example payload"}';
+
+// We use SHA-256 hash algorithm in both the HMAC computation and signature validation.
+const hashAlgorithm = 'sha256';
+
+// Decode both the public key string and signature string.
+// (Assuming `publicKeyString` and `signatureString` are both valid.)
+const publicKey = Buffer.from(publicKeyString, 'base64');
+const signature = Buffer.from(signatureString, 'base64');
+
+// Compute the hash using HMAC.
+const hmacDigest = crypto.createHmac(hashAlgorithm, publicKey)
+  .update(payload, 'ascii')
+  .digest();
+
+// Validate signature.
+const result = crypto.verify(
+  hashAlgorithm,
+  hmacDigest,
+  crypto.createPublicKey({
+      key: publicKey,
+      format: 'der',
+      type: 'pkcs1'
+  }),
+  signature
+);
+
+// Output validation result.
+console.log('signature valid:', result); // signature valid: true
+```

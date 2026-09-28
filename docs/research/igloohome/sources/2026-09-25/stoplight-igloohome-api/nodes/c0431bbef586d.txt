@@ -1,0 +1,349 @@
+# iglooconnect
+# type=article uri=/docs/Getting Started (Auth Code Flow).md
+
+# Getting Started with iglooconnect
+
+## Overview
+
+This guide helps you integrate with igloohome's API using OAuth 2.0 authentication. You'll learn how to:
+
+- Set up authentication with iglooconnect
+- Obtain and manage access tokens
+- Make your first API calls
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- A valid igloohome business partnership
+- Your callback URL(s) ready
+
+## Authentication Setup
+
+### OAuth 2.0 Integration
+
+igloohome uses OAuth 2.0 Authorization Code flow ([RFC 6749, section 4.1](https://www.rfc-editor.org/rfc/rfc6749#section-4.1)) for secure API access through [iglooconnect](https://connect.igloocompany.co/).
+
+This integration enables your users to authenticate with igloohome and grants your application access to their smart locks.
+
+### Authentication Flow Diagram
+
+The following diagram illustrates the complete OAuth 2.0 authentication flow:
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant App as Your Application
+    participant Auth as igloohome Auth Server
+    participant API as igloohome API
+    participant DB as Your Database
+
+    Note over User, Auth: 1. Authentication Phase
+    User->>App: Initiates login
+    App->>Auth: Redirect to login page
+    Auth->>User: Display login form
+    User->>Auth: Enter credentials
+    Auth->>App: Redirect with authorization code
+
+    Note over App, Auth: 2. Token Exchange
+    App->>Auth: Exchange code for tokens
+    Auth->>App: Return access_token, refresh_token, id_token
+
+    Note over App, DB: 3. Token Management
+    App->>DB: Store tokens securely
+    App->>DB: Calculate and store expiry time
+
+    Note over App, API: 4. API Operations
+    App->>API: GET /devices (with access_token)
+    API->>App: Return device list
+    App->>API: POST /algopin (create permanent PIN)
+    API->>App: Return PIN and pinId
+
+    Note over App, Auth: 5. Token Refresh (when needed)
+    App->>Auth: Refresh token request
+    Auth->>App: Return new access_token
+    App->>DB: Update stored tokens
+```
+
+### Flow Steps Explained
+
+1. **User Authentication**: The user initiates login within your app and is redirected to the igloohome secure login page.
+2. **Authorization Code**: Upon successful authentication, the user is redirected back to your defined callback URL with a temporary authorization code.
+3. **Token Exchange**: Your application exchanges this authorization code for long-lived access and refresh tokens.
+4. **Secure Storage**: Tokens and their calculated expiration times are stored securely in your database.
+5. **API Access**: The access token is used to authenticate requests to igloohome API endpoints.
+6. **Token Refresh**: Your application proactively refreshes credentials before they expire to ensure uninterrupted service.
+
+### Getting Started
+
+To integrate with iglooconnect, you must first register your application and obtain credentials.
+
+**Onboarding Process**
+
+1. **Prepare Configuration**: Determine your production callback URL(s). You can register multiple URLs if needed.
+2. **Request Access**: Contact your Business Development representative or the integration team.
+3. **Receive Credentials**: You will be issued a unique **Client ID** to identify your application.
+
+<!-- theme: danger -->
+
+> #### Static Redirect URI
+>
+> Your callback URLs **must be static** and use **HTTPS**. Dynamic URLs or plain HTTP are not supported for security reasons.
+
+**Integration Requirements:**
+
+- **Callback URL**: Must be HTTPS and exactly match one of the URLs registered with igloohome.
+- **Client ID**: The unique identifier provided during the onboarding process.
+
+### Video Tutorial
+
+\-<https://www.youtube.com/watch?v=sPkHDB_RXUA>
+
+### Scopes and Permissions
+
+Scopes define what your application can access.
+**Format** Space-separated list of scope names
+
+<!-- theme: info -->
+
+> #### Important
+>
+> If no scopes are specified, all permissions are granted.
+
+#### Available Scopes
+
+| Scope                                               | Description                     |
+| --------------------------------------------------- | ------------------------------- |
+| `igloohomeapi/algopin-permanent`                    | Create permanent access AlgoPIN |
+| `igloohomeapi/algopin-onetime`                      | Create one-time access AlgoPIN  |
+| `igloohomeapi/algopin-daily`                        | Create daily recurring AlgoPIN  |
+| `igloohomeapi/algopin-hourly`                       | Create hourly recurring AlgoPIN |
+| `igloohomeapi/create-pin-bridge-proxied-job`        | Create pins via bridge          |
+| `igloohomeapi/delete-pin-bridge-proxied-job`        | Delete pins via bridge          |
+| `igloohomeapi/lock-bridge-proxied-job`              | Lock devices via bridge         |
+| `igloohomeapi/unlock-bridge-proxied-job`            | Unlock devices via bridge       |
+| `igloohomeapi/get-devices`                          | Retrieve device list            |
+| `igloohomeapi/update-device`                        | Config device setting           |
+| `igloohomeapi/get-master-pin`                       | Get Master PIN                  |
+| `igloohomeapi/get-properties`                       | Get Properties                  |
+| `igloohomeapi/get-device-status-bridge-proxied-job` | Get device status               |
+| `igloohomeapi/get-battery-level-bridge-proxied-job` | Get battery levels              |
+| `igloohomeapi/get-activity-logs-bridge-proxied-job` | Get activity logs               |
+| `igloohomeapi/get-job-status`                       | Get job status                  |
+| `igloohomeapi/create-ekey-access`                   | Generate bluetooth key          |
+| `igloohomeapi/get-device-activity`                  | Get device activity log         |
+| `openid`                                            | OpenID Connect authentication   |
+| `profile`                                           | User profile information        |
+
+## Implementation Guide
+
+### Initiate Authentication
+
+Redirect users to igloohome's login page:
+
+```http
+https://auth.igloohome.co/login?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={SCOPES}&state={STATE}
+```
+
+#### Parameters:
+
+| Parameter       | Required | Description                                            |
+| --------------- | -------- | ------------------------------------------------------ |
+| `response_type` | Yes      | Must be `code`                                         |
+| `client_id`     | Yes      | Your client ID from igloohome                          |
+| `redirect_uri`  | Yes      | Your callback URL (URL encoded)                        |
+| `scope`         | Yes      | Space-separated scope list                             |
+| `state`         | No       | Recommended. Used for security and state preservation. |
+
+<!-- theme: info -->
+
+> #### State Parameter Usage
+>
+> When your app adds a `state` parameter to a request, the server returns its value to your app when redirecting your user.
+>
+> #### Common Use Cases
+>
+> - **Security:** Guard against Cross-Site Request Forgery (CSRF) attacks.
+> - **Context/Identification:** Identify your customer or maintain session state. You can include any data your integration requires to recognize the user or context upon their return. It is up to you how you use this parameter.
+>
+> **Note:** You can't set the value of a state parameter to a URL-encoded JSON string. To pass a string that matches this format in a state parameter, encode the string to base64, then decode it in your app.
+
+**Example Request:**
+
+```bash
+curl "https://auth.igloohome.co/login?client_id=your_client_id&response_type=code&redirect_uri=https%3A%2F%2Fyourapp.com%2Fcallback&scope=igloohomeapi%2Fget-devices+openid+profile&state=xyz987"
+```
+
+#### Error Responses
+
+| Error Code        | Description                                     | Solution                                      |
+| ----------------- | ----------------------------------------------- | --------------------------------------------- |
+| `invalid_request` | Missing required parameter (e.g., `grant_type`) | Check all required parameters are included    |
+| `invalid_client`  | Invalid client ID or secret                     | Verify credentials with igloohome team        |
+| `invalid_scope`   | Requested scope not available                   | Use only supported scopes from the list above |
+| `invalid_grant`   | Authorization code expired or already used      | Request new authorization code                |
+
+### Successful Authentication
+
+After successful authentication, the server redirects to your callback URL with an authorization code. If a `state` parameter was provided in the initial request, it is returned here unchanged.
+
+```
+https://{REDIRECT_URI}?code={AUTH_CODE}&state={STATE}
+```
+
+#### Exchange Authorization Code for Tokens
+
+Make a POST request to exchange the authorization code for access tokens:
+
+```http
+POST https://auth.igloohome.co/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {your base64 encoded credentials}
+
+grant_type=authorization_code&
+client_id={CLIENT_ID}&
+code={AUTH_CODE}&
+redirect_uri={REDIRECT_URI}
+```
+
+**Example Request:**
+
+```bash
+curl --request POST \
+  --url https://auth.igloohome.co/oauth2/token \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --header 'Authorization: Basic NThucjFwcjgyMTlj...' \
+  --data grant_type=authorization_code \
+  --data client_id=58nr1... \
+  --data code=86b48b3d-****-****-****-********** \
+  --data redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback
+```
+
+#### Success Response
+
+```json
+{
+  "id_token": "dmcxd329ujdmkemkd349r",
+  "access_token": "eyJz9sdfsdfsdfsd",
+  "refresh_token": "dn43ud8uj32nk2je",
+  "token_type": "Bearer",
+  "expires_in": 86400
+}
+```
+
+**Response Fields**
+
+| Field           | Description                                      |
+| --------------- | ------------------------------------------------ |
+| `id_token`      | Contains user identity claims (name, email)      |
+| `access_token`  | JWT token for API authentication                 |
+| `refresh_token` | Used to obtain new tokens (expires in 365 days)  |
+| `expires_in`    | Access token lifetime in seconds (86400 = 1 day) |
+| `token_type`    | Always "Bearer"                                  |
+
+#### Error Response
+
+**Error Response Format:**
+
+```json
+{
+  "error": "invalid_request"
+}
+```
+
+**Error Types:**
+
+| Error             | Description                                     |
+| ----------------- | ----------------------------------------------- |
+| `invalid_request` | Missing required parameter (e.g., `grant_type`) |
+| `invalid_client`  | Client authentication failed                    |
+| `invalid_scope`   | Invalid scope requested                         |
+| `invalid_grant`   | Authorization code expired or already used      |
+
+### Token Management
+
+Access tokens expire after 24 hours and must be refreshed using the refresh token. The refresh token itself expires 1 year after the initial login.
+
+#### Token Refresh Process
+
+When an access token expires, use the refresh token to obtain a new access token:
+
+```http
+POST https://auth.igloohome.co/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {your base64 encoded credentials}
+
+grant_type=refresh_token&
+client_id={CLIENT_ID}&
+refresh_token={REFRESH_TOKEN}
+```
+
+**Example Request:**
+
+```bash
+curl --request POST \
+  --url https://auth.igloohome.co/oauth2/token \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --header 'Authorization: Basic NThucjFwcjgyMTlj...' \
+  --data grant_type=refresh_token \
+  --data client_id=58nr1... \
+  --data refresh_token=dn43ud8uj32nk2je
+```
+
+#### Recommended Practices
+
+1. **Expiry Tracking:** Calculate and store expiry timestamp for both access and refresh tokens
+2. **Proactive Refresh:** Refresh access tokens before expiry (recommended 1 hour before)
+3. **User Re-authentication:** Monitor refresh token expiry and prompt users to re-authenticate before the 1-year limit to prevent API access interruption
+
+<!-- theme: warning -->
+
+> #### Important
+>
+> When the refresh token nears expiration (recommended 30 days before), prompt users to re-authenticate through the login flow to maintain uninterrupted API access.
+
+## Quick Start Checklist
+
+### Before You Begin
+
+- Prepare HTTPS callback URL
+
+### Implementation Steps
+
+1. Redirect user to login page
+2. Handle callback with authorization code
+3. Exchange code for tokens
+4. Store tokens securely
+5. Make first API call
+6. Implement token refresh logic
+
+### Testing Your Integration
+
+1. **Authentication Flow:** Verify login redirect works
+2. **Token Exchange:** Confirm you receive valid tokens
+3. **API Calls:** Test with minimal scopes first
+4. **Token Refresh:** Verify refresh mechanism works
+
+## Troubleshooting
+
+### Common Issues
+
+#### "Invalid redirect_uri"
+
+**Cause:** Callback URL mismatch\
+**Solution:** Ensure the redirect_uri exactly matches one of the URLs registered with igloohome
+
+#### "403 Forbidden" on API calls
+
+**Cause:** Insufficient scopes\
+**Solution:** Check that your access token includes the required scope for the API endpoint
+
+#### "Token expired" errors
+
+**Cause:** Access token expired (24-hour limit)\
+**Solution:** Implement automatic token refresh using the refresh_token
+
+### Getting Help
+
+- **Technical Issues:** Contact your BD representative
+- **Integration Support:** Email <dev+support@igloohome.com>

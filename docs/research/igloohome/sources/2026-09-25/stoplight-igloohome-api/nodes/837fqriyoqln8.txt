@@ -1,0 +1,122 @@
+# Remote Jobs for Bridge
+# type=article uri=/docs/Bridge API/Webhook Event Notifications/webhook-targeted.md
+
+---
+stoplight-id: 837fqriyoqln8
+---
+
+# Bridge Targeted Events
+
+Bridge Targeted Events are given out when a Bridge device processes a job.
+
+| Event Type    | Number Mapping |
+| ------------- | -------------- |
+| Job Processed | 3              |
+
+### Contents
+
+- [Get Device Status](#get-device-status)
+
+### Get Device Status
+
+#### Expected Payload
+
+```json
+payload: {
+    event: {
+        id: string,
+        type: 3,
+        data: {
+            jobId: string,
+            jobStatus: number <Refer below>,
+            wifiNetworkStatus: number <Refer below>,
+            wifiNetworkSsid: string,
+            wifiNetworkIpaddr: string,
+            wifiNetworkDns: string,
+            wifiNetworkChannel: number,
+            wifiNetworkBand: number,
+            wifiNetworkRssi: number,
+            lockRssiList: number[],
+            locksMaxCapacity: number,
+            locksCurrentAdded: number,
+        },
+        date: ISO_DATE,
+        proxyTransportMethod: 0
+    },
+    product: {
+        id: string,
+        type: 2
+    }
+}
+```
+
+| Job Status                       | Number Mapping |
+| -------------------------------- | -------------- |
+| Success                          | 0              |
+| Generic failure                  | 1              |
+| Another operation is in progress | 2              |
+
+| WiFi Network Status                          | Number Mapping |
+| -------------------------------------------- | -------------- |
+| Connected                                    | 0              |
+| Disconnected/SSID not found/Invalid Password | 2              |
+| No Internet Connectivity                     | 5              |
+
+<!-- ### Unlink Device -->
+
+<!-- 
+#### Expected Payload
+
+```json
+payload: {
+    event: {
+    id: string,
+    type: 3,
+    data: {
+        jobId: string,
+        jobStatus: number <Refer below>
+    },
+    date: ISO_DATE,
+    proxyTransportMethod: 0,
+    },
+    product: {
+        id: string,
+        type: 2
+    }
+}
+``` -->
+
+<!-- 
+| Job Status      | Number Mapping |
+| --------------- | -------------- |
+| Success         | 0              |
+| Generic failure | 1              | -->
+
+<!-- ### Link Device -->
+
+<!-- 
+#### Expected Payload
+
+```json
+payload: {
+    event: {
+    id: string,
+    type: 3,
+    data: {
+        jobId: string,
+        jobStatus: number <Refer below>
+    },
+    date: ISO_DATE,
+    proxyTransportMethod: 0,
+    },
+    product: {
+        id: string,
+        type: 2
+    }
+}
+```
+
+| Job Status      | Number Mapping |
+| --------------- | -------------- |
+| Success         | 0              |
+| Generic failure | 1              | -->

@@ -1,0 +1,22 @@
+# Local Postgres for iot-pms (plan F1). One server; each app gets its own database and role
+# (iot_pms now, Bobobox AU later). Passwords come from .env (git-ignored). Start with: docker compose up -d db
+name: iot-pms
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432" # localhost only
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set POSTGRES_SUPERUSER_PASSWORD in .env}
+      IOT_PMS_DB_PASSWORD: ${IOT_PMS_DB_PASSWORD:?set IOT_PMS_DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  pgdata:

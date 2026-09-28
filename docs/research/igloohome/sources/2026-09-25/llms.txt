@@ -1,0 +1,84 @@
+# igloo Platform
+
+> REST API, 4 SDKs and an MCP server for igloohome
+> smart locks, keypads and bridges.
+
+Base URL: https://api.igloodeveloper.co/v1
+Append .md to any docs URL for the Markdown source.
+
+## API Reference
+- [Algopin](/home/api_algopin)
+- [Bridge Jobs](/home/api_bridge_jobs)
+- [Devices](/home/api_devices)
+- [Ekey](/home/api_ekey)
+- [Iglookey](/home/api_iglookey)
+- [Properties](/home/api_properties)
+- [Server Health](/home/api_server_health)
+- [Token](/home/api_token)
+- [Access](/works/api_access)
+- [Account](/works/api_account)
+- [Activity](/works/api_activity)
+- [Bridges](/works/api_bridges)
+- [Departments](/works/api_departments)
+- [Devices](/works/api_devices)
+- [Jobs](/works/api_jobs)
+- [Properties](/works/api_properties)
+- [Users](/works/api_users)
+
+## Articles on Bridge API
+- [Jobs for Lock](/home/bridge-jobs-proxied)
+- [Jobs for Bridge](/home/bridge-jobs-targeted)
+- [Overview](/works/bridge-overview)
+- [Remote Job for Locks](/works/bridge-proxied-jobs)
+
+## Articles on Webhook
+- [Job Specific Data](/home/webhook-job-specific-data)
+- [Webhook Security](/home/webhook-security)
+- [Bridge Event Webhooks](/home/webhooks-bridge-event)
+- [Bridge Event Webhooks](/works/webhook-automated-event)
+- [Job Specific Data](/works/webhook-job-specific-data)
+- [Webhook Security](/works/webhook-security)
+
+## BLE SDK
+- [Best Practices](/home/sdk_best_practices)
+- [Calibration](/home/sdk_calibration)
+- [Error Reference](/home/sdk_errors)
+- [Fingerprint](/home/sdk_fingerprint)
+- [Firmware Updates](/home/sdk_firmware)
+- [Getting Started](/home/sdk_getting_started)
+- [Keycard (RFID)](/home/sdk_keycard)
+- [Linking](/home/sdk_linking)
+- [Lock & Unlock](/home/sdk_lock_unlock)
+- [Pairing](/home/sdk_pairing)
+- [PIN Management](/home/sdk_pin)
+- [Scanning](/home/sdk_scanning)
+- [Sync](/home/sdk_sync)
+- [Best Practices](/works/sdk_best_practices)
+- [Calibration](/works/sdk_calibration)
+- [Error Reference](/works/sdk_errors)
+- [Fingerprint](/works/sdk_fingerprint)
+- [Firmware Updates](/works/sdk_firmware)
+- [Getting Started](/works/sdk_getting_started)
+- [Keycard (RFID)](/works/sdk_keycard)
+- [Linking](/works/sdk_linking)
+- [Lock & Unlock](/works/sdk_lock_unlock)
+- [Pairing](/works/sdk_pairing)
+- [PIN Management](/works/sdk_pin)
+- [Scanning](/works/sdk_scanning)
+- [Sync & Jobs](/works/sdk_sync)
+
+## Documentation
+- [Overview](/home)
+- [Redirecting](/)
+- [Overview](/works)
+
+## Getting Started
+- [iglooconnect](/home/getting-started-iglooconnect)
+- [igloohome API](/home/getting-started-igloohome-api)
+- [Supported Devices](/home/supported-devices)
+- [What is algoPIN?](/home/what-is-algopin)
+- [Client Credentials](/works/getting-started-client-credentials)
+- [Code Flow](/works/getting-started-code-flow)
+- [Supported Devices](/works/supported-devices)
+- [What is AlgoPIN](/works/what-is-algopin)
+
