@@ -36,8 +36,11 @@ export function PinJobForm({
   targets,
   create,
   remove,
+  hiddenNote,
 }: {
   mode: Mode;
+  /** Why some devices are not offered (e.g. switches cannot hold PINs). */
+  hiddenNote?: string;
   targets: PinJobTarget[];
   create: (deviceRef: string, draft: CustomPinDraft, confirm?: { reason: string; password: string }) => Promise<PinJobResult>;
   remove: (deviceRef: string, pin: string, confirm?: { reason: string; password: string }) => Promise<PinJobResult>;
@@ -119,6 +122,7 @@ export function PinJobForm({
             hint: [t.experimental && "Experiment", t.bridgeName && `via ${t.bridgeName}`].filter(Boolean).join(" · ") || undefined,
           }))}
         />
+        {hiddenNote && <p className="mt-1 text-xs text-muted-foreground">{hiddenNote}</p>}
       </Field>
 
       {mode === "create" && (

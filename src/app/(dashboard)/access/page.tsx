@@ -33,6 +33,10 @@ export default async function AccessPage() {
     listVault(),
   ]);
   const enabled = getIgloohomeConfig()?.enableAlgoPin;
+  // Switches are left out of PIN jobs (they cannot hold PINs, EXP-20260928-01); say so when the account has one.
+  const switchNote = Object.values(names).some((n) => n.kind === "switch")
+    ? "Bedlock switches are not listed: they cannot hold PINs. Pick the keypad that opens them."
+    : undefined;
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,10 +76,10 @@ export default async function AccessPage() {
             <AlgoPinForm targets={targets} issue={createAlgoPinAction} />
           </TabsContent>
           <TabsContent value="custom">
-            <PinJobForm mode="create" targets={pinTargets} create={createCustomPinAction} remove={deletePinAction} />
+            <PinJobForm mode="create" targets={pinTargets} create={createCustomPinAction} remove={deletePinAction} hiddenNote={switchNote} />
           </TabsContent>
           <TabsContent value="delete">
-            <PinJobForm mode="delete" targets={pinTargets} create={createCustomPinAction} remove={deletePinAction} />
+            <PinJobForm mode="delete" targets={pinTargets} create={createCustomPinAction} remove={deletePinAction} hiddenNote={switchNote} />
           </TabsContent>
           <TabsContent value="vault">
             <PinVaultList

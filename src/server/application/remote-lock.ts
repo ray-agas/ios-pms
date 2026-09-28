@@ -13,6 +13,8 @@ import { audit } from "../users";
 import { igloohomeAs } from "./dashboard";
 import { managedAllowlist } from "./device-registry";
 import { loadTargets, recentJobs, type StartResult } from "./health-check";
+import { provenUnsupported } from "@/lib/device-support";
+
 import { checkHealthCheck, JOB_SCOPE } from "./safety";
 import type { Caller } from "./scopes";
 import { checkConfirmation } from "./step-up";
@@ -41,8 +43,10 @@ export async function remoteLockOptions(caller: Caller): Promise<Record<string, 
   const now = new Date();
   const [targets, jobs, allowlist] = await Promise.all([loadTargets(), getDb().then((db) => recentJobs(db, now)), managedAllowlist()]);
   const out: Record<string, Record<LockAction, LockOption>> = {};
-  // Locks, the switch (proven, G1) and the keypad (shown with why it does nothing: no motor).
-  for (const t of targets.filter((x) => x.kind === "lock" || x.kind === "switch" || x.kind === "keypad")) {
+  // Locks and the switch (proven, G1). The keypad is left out: it has no motor, lock/unlock does nothing there.
+  for (const t of targets.filter(
+    (x) => (x.kind === "lock" || x.kind === "switch" || x.kind === "keypad") && !provenUnsupported(x.kind, ["remote_lock", "remote_unlock"]),
+  )) {
     const decide = (action: LockAction): LockOption => {
       const d = checkHealthCheck({
         role: caller.role,

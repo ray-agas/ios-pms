@@ -101,7 +101,7 @@ flowchart LR
 | **PIN vault** | Every PIN iot-pms creates, **encrypted**. Super-admins reveal (audited) and revoke (job 5, audited, step-up) | `pins`, `pin-vault.ts` |
 | **Roles** | `viewer < operator < super_admin` (`atLeast`). "Operator (admin)" label; the admin/operator naming waits for Bobobox AU DDD | `domain/models.ts` |
 | **Scopes / ceiling** | igloohome OAuth scopes. The **ceiling** is what igloohome grants our client (synced; 20 scopes, E21). Super-admins have the whole ceiling; others have the 4 read scopes plus what a super-admin assigns | `scopes.ts`, `src/lib/scopes.ts` |
-| **Experiment** | A supported job type on a device kind the docs do not list for it (switch, keypad). Super-admin only, needs `IGLOOHOME_ENABLE_EXPERIMENTS=true` plus step-up. Once proven, a combination moves to the device-support table and becomes a regular feature | `safety.ts`, `device-support.ts` |
+| **Experiment** | A supported job type on a device kind the docs do not list for it (switch, keypad). Super-admin only, needs `IGLOOHOME_ENABLE_EXPERIMENTS=true` plus step-up. Once proven, a combination moves to the device-support table and becomes a regular feature. Combinations proven **not** to work are left out of the pickers (`provenUnsupported`): the switch in Custom/Delete PIN, the keypad in the Emergency panel. They can only be re-tested from Developer → Try it | `safety.ts`, `device-support.ts` |
 | **Step-up** | A reason (10–200 characters) plus the person's **own password** again, for risky actions. A wrong password is audited; 5 wrong ones in 15 min block step-up for that person (in-memory limiter) | `step-up.ts` |
 | **Evidence** | DOC / API / HW / UNVERIFIED badges in the UI (`EvidenceBadge`) and in the catalog | `components/visuals.tsx` |
 
@@ -310,7 +310,7 @@ Full list: [`docs/architecture/environment-configuration.md`](architecture/envir
   - Foundation plan F0–F7b and F6 review: Postgres/Drizzle, accounts and roles, registry, scale, scopes, vault, emergency lock/unlock.
   - G1 experiment mode, with the switch/keypad results turned into regular features.
   - The access UX (device picker, vault filters, compact Issued list).
-- **Tests:** 163 passing (`bun run check`), build passing.
+- **Tests:** 166 passing (`bun run check`), build passing.
 - **Progress logs:**
   - [`docs/plans/iot-pms-platform-foundation-plan.md`](plans/iot-pms-platform-foundation-plan.md) (most recent);
   - [`docs/plans/igloohome-implementation-plan.md`](plans/igloohome-implementation-plan.md) §21 (slice 1 / M5);
@@ -353,7 +353,7 @@ Full list: [`docs/architecture/environment-configuration.md`](architecture/envir
   4. a scope in `src/lib/scopes.ts` with `usedFor`;
   5. tests;
   6. update §7 and §13 here.
-- **Adding a device capability:** once proven, add it to `src/lib/device-support.ts` with the EXP reference; do not loosen the guard elsewhere.
+- **Adding a device capability:** once proven, add it to `src/lib/device-support.ts` with the EXP reference; do not loosen the guard elsewhere. A combination proven not to work there is hidden from the pickers automatically (`provenUnsupported`) and still refused by the guard.
 - **Adding a table:** schema + migration + §9 here; keep IDs and PINs rules.
 - **UI:** built for many devices (compact, filters, paging); server decides allowed/refused and gives a reason for every refusal (shown on hover); step-up for risky actions.
 - **Tests:** unit tests in `tests/unit/*.test.ts` (bun:test, PGlite via `openTestDb()`); contract tests against `tests/fixtures/igloohome/`; pure rules get their own tests.

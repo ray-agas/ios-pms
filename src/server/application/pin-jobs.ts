@@ -1,6 +1,7 @@
 import "server-only";
 
 import { targetName } from "@/lib/device-kinds";
+import { provenUnsupported } from "@/lib/device-support";
 
 import { eq } from "drizzle-orm";
 
@@ -53,8 +54,9 @@ async function decide(kind: PinKind, caller: Caller) {
   const views = new Map((site.data?.devices ?? []).map((d) => [d.id, d]));
   const places = placesOf(site.data);
   return targets
-    // Locks and the keypad (proven, G1). The switch is listed so its refusal says why: its PINs live on the keypad.
-    .filter((t) => t.kind === "lock" || t.kind === "keypad" || t.kind === "switch")
+    // Locks and the keypad (proven, G1). Kinds proven unable to hold PINs (the switch) are left out; its PINs live on
+    // its keypad. Symmetric for create and delete so both lists always hold the same devices.
+    .filter((t) => (t.kind === "lock" || t.kind === "keypad" || t.kind === "switch") && !provenUnsupported(t.kind, ["pin_create", "pin_delete"]))
     .map((t) => {
       const ref = redactDeviceId(t.device.deviceId);
       const view = views.get(ref);

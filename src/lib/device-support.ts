@@ -36,3 +36,10 @@ export const DEVICE_JOB_SUPPORT: Partial<Record<DeviceKind, Partial<Record<JobKi
 };
 
 export const supportOf = (kind: DeviceKind, job: JobKind): SupportEntry | undefined => DEVICE_JOB_SUPPORT[kind]?.[job];
+
+/** Proven NOT to do any of these jobs on this kind: leave it out of the pickers (the guard still refuses it too). */
+export const provenUnsupported = (kind: DeviceKind, jobs: JobKind[]): boolean =>
+  jobs.every((job) => {
+    const s = supportOf(kind, job)?.support;
+    return s === "no_result" || s === "no_effect";
+  });
